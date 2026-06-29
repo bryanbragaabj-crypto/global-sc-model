@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
-  encodeStoragePath,
   getErrorMessage,
   getSupabaseHeaders,
   getSupabaseServerConfig,
@@ -10,32 +9,38 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const PEDIDOS_BUCKET = "pedido-anexos";
-const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
-
-const ALLOWED_FILE_TYPES: Record<string, "PDF" | "PNG" | "JPG"> = {
-  "application/pdf": "PDF",
-  "image/png": "PNG",
-  "image/jpeg": "JPG",
+type AnexoRecebido = {
+  id?: unknown;
+  nome?: unknown;
+  tipo?: unknown;
+  tamanho?: unknown;
+  caminho?: unknown;
 };
 
-function getText(formData: FormData, key: string) {
-  const value = formData.get(key);
+type PedidoRecebido = {
+  cnpj?: unknown;
+  nome?: unknown;
+  nomeFantasia?: unknown;
+  inscricaoEstadual?: unknown;
+  endereco?: unknown;
+  numero?: unknown;
+  bairro?: unknown;
+  cep?: unknown;
+  cidade?: unknown;
+  telefone?: unknown;
+  email?: unknown;
+  representante?: unknown;
+  mensagem?: unknown;
+  origem?: unknown;
+  anexos?: unknown;
+};
 
+function getText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
 function onlyNumbers(value: string) {
   return value.replace(/\D/g, "");
-}
-
-function safeFileName(name: string) {
-  const normalized = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  return normalized
-    .replace(/[^a-zA-Z0-9._-]/g, "-")
-    .replace(/-+/g, "-")
-    .slice(0, 120);
 }
 
 function createOrderNumber() {
@@ -46,25 +51,58 @@ function createOrderNumber() {
   return `GS${year}-${sequence}`;
 }
 
+function isSafeAttachmentId(value: string) {
+  return /^[a-zA-Z0-9._-]{8,120}$/.test(value);
+}
+
+function readAttachments(value: unknown) {
+  const entrada = Array.isArray(value) ? value : [];
+
+  return entrada.map((item, index) => {
+    const anexo = item as AnexoRecebido;
+    const id = getText(anexo.id);
+    const nome = getText(anexo.nome);
+    const tipo = getText(anexo.tipo);
+    const tamanho = getText(anexo.tamanho);
+    const caminho = getText(anexo.caminho);
+
+    if (
+      !isSafeAttachmentId(id) ||
+      !nome ||
+      (tipo !== "PDF" && tipo !== "PNG" && tipo !== "JPG") ||
+      !caminho.startsWith("pedidos/") ||
+      caminho.length > 500
+    ) {
+      throw new Error(`Anexo ${index + 1} inválido.`);
+    }
+
+    return {
+      id,
+      nome,
+      tipo,
+      tamanho: tamanho || "Não informado",
+      caminho,
+    };
+  });
+}
+
 export async function POST(request: Request) {
-  const uploadedPaths: string[] = [];
-
   try {
-    const formData = await request.formData();
+    const body = (await request.json()) as PedidoRecebido;
 
-    const cnpj = getText(formData, "cnpj");
-    const nome = getText(formData, "nome");
-    const nomeFantasia = getText(formData, "nomeFantasia");
-    const endereco = getText(formData, "endereco");
-    const numeroEndereco = getText(formData, "numero");
-    const bairro = getText(formData, "bairro");
-    const cep = getText(formData, "cep");
-    const cidade = getText(formData, "cidade");
-    const telefone = getText(formData, "telefone");
-    const email = getText(formData, "email").toLowerCase();
-    const representante = getText(formData, "representante");
-    const mensagem = getText(formData, "mensagem");
-    const origemSolicitada = getText(formData, "origem");
+    const cnpj = getText(body.cnpj);
+    const nome = getText(body.nome);
+    const nomeFantasia = getText(body.nomeFantasia);
+    const endereco = getText(body.endereco);
+    const numeroEndereco = getText(body.numero);
+    const bairro = getText(body.bairro);
+    const cep = getText(body.cep);
+    const cidade = getText(body.cidade);
+    const telefone = getText(body.telefone);
+    const email = getText(body.email).toLowerCase();
+    const representante = getText(body.representante);
+    const mensagem = getText(body.mensagem);
+    const anexos = readAttachments(body.anexos);
 
     if (
       !cnpj ||
@@ -99,11 +137,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const attachmentFiles = formData
-      .getAll("anexos")
-      .filter((item): item is File => item instanceof File);
-
-    if (!mensagem && attachmentFiles.length === 0) {
+    if (!mensagem && anexos.length === 0) {
       return NextResponse.json(
         { ok: false, message: "Escreva uma mensagem ou adicione ao menos um anexo." },
         { status: 400 },
@@ -114,6 +148,7 @@ export async function POST(request: Request) {
     const isAdmin =
       cookieStore.get("global-sc-admin-session")?.value === "autorizado";
 
+    const origemSolicitada = getText(body.origem);
     const origem =
       isAdmin && origemSolicitada === "MANUAL" ? "MANUAL" : "SITE";
 
@@ -121,63 +156,7 @@ export async function POST(request: Request) {
     const pedidoId = crypto.randomUUID();
     const numeroPedido = createOrderNumber();
 
-    const anexos: Array<{
-      id: string;
-      nome: string;
-      tipo: "PDF" | "PNG" | "JPG";
-      tamanho: string;
-      caminho: string;
-    }> = [];
-
-    for (const file of attachmentFiles) {
-      const tipo = ALLOWED_FILE_TYPES[file.type];
-
-      if (!tipo) {
-        return NextResponse.json(
-          { ok: false, message: "Envie somente arquivos PDF, PNG ou JPG." },
-          { status: 400 },
-        );
-      }
-
-      if (file.size > MAX_ATTACHMENT_SIZE) {
-        return NextResponse.json(
-          { ok: false, message: "Cada arquivo pode ter no máximo 20 MB." },
-          { status: 400 },
-        );
-      }
-
-      const attachmentId = crypto.randomUUID();
-      const caminho = `${pedidoId}/${attachmentId}-${safeFileName(file.name)}`;
-      const uploadUrl = `${config.url}/storage/v1/object/${PEDIDOS_BUCKET}/${encodeStoragePath(caminho)}`;
-
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "POST",
-        headers: getSupabaseHeaders(config, {
-          "Content-Type": file.type,
-          "x-upsert": "false",
-        }),
-        body: new Uint8Array(await file.arrayBuffer()),
-      });
-
-      if (!uploadResponse.ok) {
-        const motivo = await getErrorMessage(uploadResponse);
-        throw new Error(
-          `Não foi possível salvar o anexo "${file.name}": ${motivo}`,
-        );
-      }
-
-      uploadedPaths.push(caminho);
-
-      anexos.push({
-        id: attachmentId,
-        nome: file.name,
-        tipo,
-        tamanho: `${Math.max(1, Math.round(file.size / 1024))} KB`,
-        caminho,
-      });
-    }
-
-    const insertResponse = await fetch(`${config.url}/rest/v1/pedidos`, {
+    const response = await fetch(`${config.url}/rest/v1/pedidos`, {
       method: "POST",
       headers: getSupabaseHeaders(config, {
         "Content-Type": "application/json",
@@ -192,7 +171,7 @@ export async function POST(request: Request) {
         cnpj,
         nome,
         nome_fantasia: nomeFantasia,
-        inscricao_estadual: getText(formData, "inscricaoEstadual"),
+        inscricao_estadual: getText(body.inscricaoEstadual),
         endereco,
         numero_endereco: numeroEndereco,
         bairro,
@@ -209,35 +188,15 @@ export async function POST(request: Request) {
       }),
     });
 
-    if (!insertResponse.ok) {
-      const motivo = await getErrorMessage(insertResponse);
-      throw new Error(`Não foi possível registrar o pedido: ${motivo}`);
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response));
     }
 
-    return NextResponse.json({ ok: true, numero: numeroPedido }, { status: 201 });
+    return NextResponse.json(
+      { ok: true, numero: numeroPedido },
+      { status: 201 },
+    );
   } catch (error) {
-    /*
-      Em caso de falha depois de anexar arquivos, tenta remover o que foi enviado.
-      Isso evita deixar arquivos soltos no Storage.
-    */
-    if (uploadedPaths.length > 0) {
-      try {
-        const config = getSupabaseServerConfig();
-
-        await fetch(`${config.url}/storage/v1/object/${PEDIDOS_BUCKET}`, {
-          method: "DELETE",
-          headers: getSupabaseHeaders(config, {
-            "Content-Type": "application/json",
-          }),
-          body: JSON.stringify({
-            prefixes: uploadedPaths,
-          }),
-        });
-      } catch {
-        // Mantém a mensagem do erro principal.
-      }
-    }
-
     return NextResponse.json(
       {
         ok: false,

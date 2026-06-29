@@ -32,6 +32,26 @@ type PedidoSubmissionResponse = {
   numero?: string;
 };
 
+type AnexoPreparado = {
+  id: string;
+  nome: string;
+  tipo: Attachment["type"];
+  tamanho: string;
+  caminho: string;
+};
+
+type AnexoAssinado = {
+  id: string;
+  caminho: string;
+  signedUrl: string;
+};
+
+type PrepararAnexosResponse = {
+  ok?: boolean;
+  message?: string;
+  anexos?: AnexoAssinado[];
+};
+
 type CnpjResponse = {
   cnpj?: string;
   razao_social?: string;
@@ -187,6 +207,115 @@ function getAttachmentType(file: File): Attachment["type"] | null {
   return null;
 }
 
+
+async function prepararEEnviarAnexos(
+  attachments: Attachment[],
+): Promise<AnexoPreparado[]> {
+  if (attachments.length === 0) {
+    return [];
+  }
+
+  const prepararResponse = await fetch("/api/pedidos/anexos", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      arquivos: attachments.map((attachment) => ({
+        id: attachment.id,
+        nome: attachment.file.name,
+        tipo: attachment.type,
+        tamanho: attachment.file.size,
+      })),
+    }),
+  });
+
+  const prepararResultado = (await prepararResponse
+    .json()
+    .catch(() => ({}))) as PrepararAnexosResponse;
+
+  if (
+    !prepararResponse.ok ||
+    prepararResultado.ok !== true ||
+    !Array.isArray(prepararResultado.anexos)
+  ) {
+    throw new Error(
+      prepararResultado.message ||
+        "Não foi possível preparar o envio dos anexos.",
+    );
+  }
+
+  const anexosPorId = new Map(
+    prepararResultado.anexos.map((anexo) => [anexo.id, anexo]),
+  );
+
+  const anexosEnviados: AnexoPreparado[] = [];
+
+  try {
+    for (const attachment of attachments) {
+      const anexoAssinado = anexosPorId.get(attachment.id);
+
+      if (!anexoAssinado) {
+        throw new Error(
+          `Não foi possível preparar o arquivo "${attachment.file.name}".`,
+        );
+      }
+
+      /*
+        O arquivo vai direto do celular para o Supabase Storage.
+        Assim ele não passa pelo limite de 4,5 MB da Vercel.
+      */
+      const corpoUpload = new FormData();
+      corpoUpload.append("cacheControl", "3600");
+      corpoUpload.append("", attachment.file, attachment.file.name);
+
+      const uploadResponse = await fetch(anexoAssinado.signedUrl, {
+        method: "PUT",
+        headers: {
+          "x-upsert": "false",
+        },
+        body: corpoUpload,
+      });
+
+      if (!uploadResponse.ok) {
+        const textoErro = await uploadResponse.text().catch(() => "");
+
+        throw new Error(
+          `Não foi possível enviar "${attachment.file.name}". ${
+            textoErro || "Tente novamente."
+          }`,
+        );
+      }
+
+      anexosEnviados.push({
+        id: attachment.id,
+        nome: attachment.file.name,
+        tipo: attachment.type,
+        tamanho: `${Math.max(
+          1,
+          Math.round(attachment.file.size / 1024),
+        )} KB`,
+        caminho: anexoAssinado.caminho,
+      });
+    }
+
+    return anexosEnviados;
+  } catch (error) {
+    if (anexosEnviados.length > 0) {
+      void fetch("/api/pedidos/anexos", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          caminhos: anexosEnviados.map((anexo) => anexo.caminho),
+        }),
+      });
+    }
+
+    throw error;
+  }
+}
 
 export default function PedidoPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -379,23 +508,26 @@ export default function PedidoPage() {
 
     try {
       setIsSubmitting(true);
-      setFeedback("");
+      setFeedback(
+        attachments.length > 0
+          ? "Enviando anexos com segurança..."
+          : "Enviando pedido...",
+      );
 
-      const dadosEnvio = new FormData();
+      const anexosProntos = await prepararEEnviarAnexos(attachments);
 
-      Object.entries(formData).forEach(([campo, valor]) => {
-        dadosEnvio.append(campo, valor);
-      });
-
-      dadosEnvio.append("origem", isAdminOrder ? "MANUAL" : "SITE");
-
-      attachments.forEach((attachment) => {
-        dadosEnvio.append("anexos", attachment.file, attachment.file.name);
-      });
+      setFeedback("Registrando pedido...");
 
       const response = await fetch("/api/pedidos", {
         method: "POST",
-        body: dadosEnvio,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          origem: isAdminOrder ? "MANUAL" : "SITE",
+          anexos: anexosProntos,
+        }),
       });
 
       const resposta = (await response
@@ -415,6 +547,7 @@ export default function PedidoPage() {
       }
 
       clearForm();
+      setFeedback("");
       setShowSuccess(true);
     } catch (error) {
       setFeedback(
