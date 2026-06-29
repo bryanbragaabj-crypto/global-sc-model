@@ -265,7 +265,7 @@ export default function DetalhePedidoPage() {
     return;
   }
 
-  if (pedido.status === "FINALIZADO") 
+  if (pedido.status === "FINALIZADO") }
     {
 
     const pedidoAtualizado = atualizarStatusPedido(
