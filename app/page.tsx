@@ -554,7 +554,7 @@ export default function Home() {
             <div>
               <h2>FRETE A COMBINAR:</h2>
               <p>
-                FRETE NA REGIÃO DE FLORIANÓPOLIS. OUTRA REGIÃO CONSULTAR VALOR.
+                FRETE NA REGIÃO DE FLORIANÓPOLIS, OUTRA REGIÃO CONSULTAR VALOR.
               </p>
             </div>
           </article>
