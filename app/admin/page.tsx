@@ -5,6 +5,17 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./admin.module.css";
 
+/*
+  Credenciais iniciais para apresentação.
+  Esta validação impede entrar no painel com dados vazios ou incorretos.
+*/
+const LOGIN_ADMIN = {
+  email: "admin@globalsc.com.br",
+  senha: "GlobalSC@2026",
+  nome: "Admin Global SC",
+  perfil: "Administrador Master",
+};
+
 function MailIcon() {
   return (
     <svg className={styles.fieldIcon} viewBox="0 0 24 24" aria-hidden="true">
@@ -69,17 +80,29 @@ export default function AdminLoginPage() {
   function entrarNoPainel(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!email.trim() || !senha.trim()) {
+    const emailDigitado = email.trim().toLowerCase();
+    const senhaDigitada = senha.trim();
+
+    if (!emailDigitado || !senhaDigitada) {
       mostrarMensagem("Preencha o e-mail e a senha para continuar.");
+      return;
+    }
+
+    if (
+      emailDigitado !== LOGIN_ADMIN.email ||
+      senhaDigitada !== LOGIN_ADMIN.senha
+    ) {
+      mostrarMensagem("E-mail ou senha incorretos.");
       return;
     }
 
     window.localStorage.setItem(
       "global-sc-usuario-logado",
       JSON.stringify({
-        nome: "Admin Global SC",
-        perfil: "Administrador",
-        email: email.trim(),
+        autenticado: true,
+        nome: LOGIN_ADMIN.nome,
+        perfil: LOGIN_ADMIN.perfil,
+        email: LOGIN_ADMIN.email,
         lembrar,
       }),
     );
@@ -119,7 +142,10 @@ export default function AdminLoginPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setFeedback("");
+                }}
                 placeholder="seu@email.com"
                 autoComplete="email"
                 required
@@ -136,7 +162,10 @@ export default function AdminLoginPage() {
               <input
                 type={mostrarSenha ? "text" : "password"}
                 value={senha}
-                onChange={(event) => setSenha(event.target.value)}
+                onChange={(event) => {
+                  setSenha(event.target.value);
+                  setFeedback("");
+                }}
                 placeholder="Sua senha"
                 autoComplete="current-password"
                 required
