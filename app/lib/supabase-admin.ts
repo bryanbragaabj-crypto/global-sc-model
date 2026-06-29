@@ -1,28 +1,68 @@
-import { createClient } from "@supabase/supabase-js";
+/*
+  Cliente REST privado do Supabase sem dependência externa.
+  Este arquivo é usado somente em rotas do servidor.
+*/
+
+type SupabaseServerConfig = {
+  url: string;
+  secretKey: string;
+};
 
 function getRequiredEnv(name: string) {
-  const value = process.env[name];
+  const value = process.env[name]?.trim();
 
   if (!value) {
-    throw new Error(`A variável ${name} não foi configurada.`);
+    throw new Error(`A variável ${name} não foi configurada na Vercel.`);
   }
 
   return value;
 }
 
-/*
-  Conexão privada do servidor com o Supabase.
-  Nunca importe este arquivo em páginas com "use client".
-*/
-export function getSupabaseAdmin() {
-  return createClient(
-    getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    },
-  );
+export function getSupabaseServerConfig(): SupabaseServerConfig {
+  const url = getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL").replace(/\/$/, "");
+  const secretKey = getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+  return {
+    url,
+    secretKey,
+  };
+}
+
+export function getSupabaseHeaders(
+  config: SupabaseServerConfig,
+  extraHeaders: HeadersInit = {},
+) {
+  return {
+    apikey: config.secretKey,
+    Authorization: `Bearer ${config.secretKey}`,
+    ...extraHeaders,
+  };
+}
+
+export function encodeStoragePath(path: string) {
+  return path
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+}
+
+export async function getErrorMessage(response: Response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  try {
+    if (contentType.includes("application/json")) {
+      const data = (await response.json()) as {
+        message?: string;
+        error?: string;
+        hint?: string;
+      };
+
+      return data.message || data.error || "Erro desconhecido no Supabase.";
+    }
+
+    const text = await response.text();
+    return text || "Erro desconhecido no Supabase.";
+  } catch {
+    return "Erro desconhecido no Supabase.";
+  }
 }

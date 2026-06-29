@@ -1,6 +1,11 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../lib/supabase-admin";
+import {
+  encodeStoragePath,
+  getErrorMessage,
+  getSupabaseHeaders,
+  getSupabaseServerConfig,
+} from "../../lib/supabase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,51 +46,6 @@ function createOrderNumber() {
   return `GS${year}-${sequence}`;
 }
 
-/*
-  Garante que o local privado para anexos exista antes de enviar arquivo.
-  Esta ação ocorre somente no servidor, usando a chave secreta do Supabase.
-*/
-async function garantirBucketDeAnexos() {
-  const supabase = getSupabaseAdmin();
-
-  const { data: bucket, error: bucketError } = await supabase.storage.getBucket(
-    PEDIDOS_BUCKET,
-  );
-
-  if (bucket && !bucketError) {
-    return;
-  }
-
-  const { error: createBucketError } = await supabase.storage.createBucket(
-    PEDIDOS_BUCKET,
-    {
-      public: false,
-      fileSizeLimit: MAX_ATTACHMENT_SIZE,
-      allowedMimeTypes: [
-        "application/pdf",
-        "image/png",
-        "image/jpeg",
-      ],
-    },
-  );
-
-  /*
-    Se duas pessoas enviarem ao mesmo tempo, uma pode criar primeiro.
-    Nesse caso, consulta novamente para confirmar que ele existe.
-  */
-  if (createBucketError) {
-    const { data: bucketAfterCreate } = await supabase.storage.getBucket(
-      PEDIDOS_BUCKET,
-    );
-
-    if (!bucketAfterCreate) {
-      throw new Error(
-        `Não foi possível preparar o armazenamento de anexos: ${createBucketError.message}`,
-      );
-    }
-  }
-}
-
 export async function POST(request: Request) {
   const uploadedPaths: string[] = [];
 
@@ -120,30 +80,21 @@ export async function POST(request: Request) {
       !representante
     ) {
       return NextResponse.json(
-        {
-          ok: false,
-          message: "Preencha todos os campos obrigatórios do pedido.",
-        },
+        { ok: false, message: "Preencha todos os campos obrigatórios do pedido." },
         { status: 400 },
       );
     }
 
     if (onlyNumbers(cnpj).length !== 14) {
       return NextResponse.json(
-        {
-          ok: false,
-          message: "Informe um CNPJ válido com 14 números.",
-        },
+        { ok: false, message: "Informe um CNPJ válido com 14 números." },
         { status: 400 },
       );
     }
 
     if (!email.includes("@")) {
       return NextResponse.json(
-        {
-          ok: false,
-          message: "Informe um e-mail válido.",
-        },
+        { ok: false, message: "Informe um e-mail válido." },
         { status: 400 },
       );
     }
@@ -154,10 +105,7 @@ export async function POST(request: Request) {
 
     if (!mensagem && attachmentFiles.length === 0) {
       return NextResponse.json(
-        {
-          ok: false,
-          message: "Escreva uma mensagem ou adicione ao menos um anexo.",
-        },
+        { ok: false, message: "Escreva uma mensagem ou adicione ao menos um anexo." },
         { status: 400 },
       );
     }
@@ -169,7 +117,7 @@ export async function POST(request: Request) {
     const origem =
       isAdmin && origemSolicitada === "MANUAL" ? "MANUAL" : "SITE";
 
-    const supabase = getSupabaseAdmin();
+    const config = getSupabaseServerConfig();
     const pedidoId = crypto.randomUUID();
     const numeroPedido = createOrderNumber();
 
@@ -181,50 +129,40 @@ export async function POST(request: Request) {
       caminho: string;
     }> = [];
 
-    if (attachmentFiles.length > 0) {
-      await garantirBucketDeAnexos();
-    }
-
     for (const file of attachmentFiles) {
       const tipo = ALLOWED_FILE_TYPES[file.type];
 
       if (!tipo) {
         return NextResponse.json(
-          {
-            ok: false,
-            message: "Envie somente arquivos PDF, PNG ou JPG.",
-          },
+          { ok: false, message: "Envie somente arquivos PDF, PNG ou JPG." },
           { status: 400 },
         );
       }
 
       if (file.size > MAX_ATTACHMENT_SIZE) {
         return NextResponse.json(
-          {
-            ok: false,
-            message: "Cada arquivo pode ter no máximo 20 MB.",
-          },
+          { ok: false, message: "Cada arquivo pode ter no máximo 20 MB." },
           { status: 400 },
         );
       }
 
       const attachmentId = crypto.randomUUID();
-      const caminho = `${pedidoId}/${attachmentId}-${safeFileName(
-        file.name,
-      )}`;
+      const caminho = `${pedidoId}/${attachmentId}-${safeFileName(file.name)}`;
+      const uploadUrl = `${config.url}/storage/v1/object/${PEDIDOS_BUCKET}/${encodeStoragePath(caminho)}`;
 
-      const fileData = new Uint8Array(await file.arrayBuffer());
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "POST",
+        headers: getSupabaseHeaders(config, {
+          "Content-Type": file.type,
+          "x-upsert": "false",
+        }),
+        body: new Uint8Array(await file.arrayBuffer()),
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from(PEDIDOS_BUCKET)
-        .upload(caminho, fileData, {
-          contentType: file.type,
-          upsert: false,
-        });
-
-      if (uploadError) {
+      if (!uploadResponse.ok) {
+        const motivo = await getErrorMessage(uploadResponse);
         throw new Error(
-          `Não foi possível salvar o anexo "${file.name}": ${uploadError.message}`,
+          `Não foi possível salvar o anexo "${file.name}": ${motivo}`,
         );
       }
 
@@ -239,51 +177,64 @@ export async function POST(request: Request) {
       });
     }
 
-    const { error: insertError } = await supabase.from("pedidos").insert({
-      id: pedidoId,
-      numero: numeroPedido,
-      cliente: nomeFantasia || nome,
-      email,
-      telefone,
-      cnpj,
-      nome,
-      nome_fantasia: nomeFantasia,
-      inscricao_estadual: getText(formData, "inscricaoEstadual"),
-      endereco,
-      numero_endereco: numeroEndereco,
-      bairro,
-      cep,
-      cidade,
-      representante,
-      assunto: `Pedido - ${nomeFantasia || nome}`,
-      mensagem: mensagem || "Pedido enviado com anexos.",
-      importadora: "A definir",
-      origem,
-      status: "RECEBIDO",
-      responsavel: isAdmin ? "Admin Global SC" : null,
-      anexos,
+    const insertResponse = await fetch(`${config.url}/rest/v1/pedidos`, {
+      method: "POST",
+      headers: getSupabaseHeaders(config, {
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      }),
+      body: JSON.stringify({
+        id: pedidoId,
+        numero: numeroPedido,
+        cliente: nomeFantasia || nome,
+        email,
+        telefone,
+        cnpj,
+        nome,
+        nome_fantasia: nomeFantasia,
+        inscricao_estadual: getText(formData, "inscricaoEstadual"),
+        endereco,
+        numero_endereco: numeroEndereco,
+        bairro,
+        cep,
+        cidade,
+        representante,
+        assunto: `Pedido - ${nomeFantasia || nome}`,
+        mensagem: mensagem || "Pedido enviado com anexos.",
+        importadora: "A definir",
+        origem,
+        status: "RECEBIDO",
+        responsavel: isAdmin ? "Admin Global SC" : null,
+        anexos,
+      }),
     });
 
-    if (insertError) {
-      throw new Error(
-        `Não foi possível registrar o pedido no banco: ${insertError.message}`,
-      );
+    if (!insertResponse.ok) {
+      const motivo = await getErrorMessage(insertResponse);
+      throw new Error(`Não foi possível registrar o pedido: ${motivo}`);
     }
 
-    return NextResponse.json(
-      {
-        ok: true,
-        numero: numeroPedido,
-      },
-      { status: 201 },
-    );
+    return NextResponse.json({ ok: true, numero: numeroPedido }, { status: 201 });
   } catch (error) {
+    /*
+      Em caso de falha depois de anexar arquivos, tenta remover o que foi enviado.
+      Isso evita deixar arquivos soltos no Storage.
+    */
     if (uploadedPaths.length > 0) {
       try {
-        const supabase = getSupabaseAdmin();
-        await supabase.storage.from(PEDIDOS_BUCKET).remove(uploadedPaths);
+        const config = getSupabaseServerConfig();
+
+        await fetch(`${config.url}/storage/v1/object/${PEDIDOS_BUCKET}`, {
+          method: "DELETE",
+          headers: getSupabaseHeaders(config, {
+            "Content-Type": "application/json",
+          }),
+          body: JSON.stringify({
+            prefixes: uploadedPaths,
+          }),
+        });
       } catch {
-        // Mantém a mensagem do problema principal.
+        // Mantém a mensagem do erro principal.
       }
     }
 

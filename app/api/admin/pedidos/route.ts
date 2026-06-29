@@ -1,6 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../lib/supabase-admin";
+import {
+  getErrorMessage,
+  getSupabaseHeaders,
+  getSupabaseServerConfig,
+} from "../../../lib/supabase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,30 +61,10 @@ async function verificarAdmin() {
   return cookieStore.get("global-sc-admin-session")?.value === "autorizado";
 }
 
-async function formatarPedido(pedido: PedidoBanco) {
-  const supabase = getSupabaseAdmin();
-
+function formatarPedido(pedido: PedidoBanco) {
   const anexosOriginais = Array.isArray(pedido.anexos)
     ? pedido.anexos
     : [];
-
-  const caminhos = anexosOriginais
-    .map((anexo) => anexo.caminho)
-    .filter((caminho): caminho is string => Boolean(caminho));
-
-  const urlsAssinadas = new Map<string, string>();
-
-  if (caminhos.length > 0) {
-    const { data } = await supabase.storage
-      .from("pedido-anexos")
-      .createSignedUrls(caminhos, 60 * 60);
-
-    data?.forEach((arquivo) => {
-      if (arquivo.path && arquivo.signedUrl) {
-        urlsAssinadas.set(arquivo.path, arquivo.signedUrl);
-      }
-    });
-  }
 
   return {
     id: pedido.id,
@@ -111,9 +95,7 @@ async function formatarPedido(pedido: PedidoBanco) {
       nome: anexo.nome || "Anexo",
       tipo: anexo.tipo || "PDF",
       tamanho: anexo.tamanho || "Não informado",
-      url: anexo.caminho
-        ? urlsAssinadas.get(anexo.caminho) || ""
-        : "",
+      caminho: anexo.caminho || "",
     })),
   };
 }
@@ -121,36 +103,29 @@ async function formatarPedido(pedido: PedidoBanco) {
 export async function GET() {
   if (!(await verificarAdmin())) {
     return NextResponse.json(
-      {
-        ok: false,
-        message: "Acesso administrativo não autorizado.",
-      },
+      { ok: false, message: "Acesso administrativo não autorizado." },
       { status: 401 },
     );
   }
 
   try {
-    const supabase = getSupabaseAdmin();
-
-    const { data, error } = await supabase
-      .from("pedidos")
-      .select("*")
-      .order("criado_em", { ascending: false });
-
-    if (error) {
-      throw new Error("Não foi possível carregar os pedidos.");
-    }
-
-    const pedidos = await Promise.all(
-      ((data || []) as PedidoBanco[]).map((pedido) =>
-        formatarPedido(pedido),
-      ),
+    const config = getSupabaseServerConfig();
+    const response = await fetch(
+      `${config.url}/rest/v1/pedidos?select=*&order=criado_em.desc`,
+      {
+        headers: getSupabaseHeaders(config),
+        cache: "no-store",
+      },
     );
 
-    return NextResponse.json({
-      ok: true,
-      pedidos,
-    });
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response));
+    }
+
+    const data = (await response.json()) as PedidoBanco[];
+    const pedidos = data.map(formatarPedido);
+
+    return NextResponse.json({ ok: true, pedidos });
   } catch (error) {
     return NextResponse.json(
       {
@@ -168,10 +143,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   if (!(await verificarAdmin())) {
     return NextResponse.json(
-      {
-        ok: false,
-        message: "Acesso administrativo não autorizado.",
-      },
+      { ok: false, message: "Acesso administrativo não autorizado." },
       { status: 401 },
     );
   }
@@ -184,15 +156,11 @@ export async function PATCH(request: Request) {
 
     const pedidoId =
       typeof body.pedidoId === "string" ? body.pedidoId.trim() : "";
-
     const status = typeof body.status === "string" ? body.status : "";
 
     if (!pedidoId) {
       return NextResponse.json(
-        {
-          ok: false,
-          message: "Pedido inválido.",
-        },
+        { ok: false, message: "Pedido inválido." },
         { status: 400 },
       );
     }
@@ -203,30 +171,38 @@ export async function PATCH(request: Request) {
       status !== "FINALIZADO"
     ) {
       return NextResponse.json(
-        {
-          ok: false,
-          message: "Status de pedido inválido.",
-        },
+        { ok: false, message: "Status de pedido inválido." },
         { status: 400 },
       );
     }
 
-    const supabase = getSupabaseAdmin();
+    const config = getSupabaseServerConfig();
+    const response = await fetch(
+      `${config.url}/rest/v1/pedidos?id=eq.${encodeURIComponent(pedidoId)}`,
+      {
+        method: "PATCH",
+        headers: getSupabaseHeaders(config, {
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        }),
+        body: JSON.stringify({ status }),
+      },
+    );
 
-    const { data, error } = await supabase
-      .from("pedidos")
-      .update({ status })
-      .eq("id", pedidoId)
-      .select("*")
-      .single();
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response));
+    }
 
-    if (error || !data) {
-      throw new Error("Não foi possível atualizar o status do pedido.");
+    const pedidosAtualizados = (await response.json()) as PedidoBanco[];
+    const pedido = pedidosAtualizados[0];
+
+    if (!pedido) {
+      throw new Error("Pedido não encontrado.");
     }
 
     return NextResponse.json({
       ok: true,
-      pedido: await formatarPedido(data as PedidoBanco),
+      pedido: formatarPedido(pedido),
     });
   } catch (error) {
     return NextResponse.json(
