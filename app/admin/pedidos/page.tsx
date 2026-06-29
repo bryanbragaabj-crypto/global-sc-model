@@ -10,7 +10,8 @@ import {
 } from "./pedidos-data";
 import {
   PEDIDOS_UPDATED_EVENT,
-  atualizarStatusPedido,
+  atualizarStatusPedidoNoServidor,
+  carregarPedidosDoServidor,
   getPedidos,
 } from "./pedidos-storage";
 import styles from "./pedidos.module.css";
@@ -157,8 +158,19 @@ export default function PedidosPage() {
   const [perfilUsuario, setPerfilUsuario] = useState("Administrador");
 
   useEffect(() => {
-    function carregarPedidos() {
-      setPedidos(getPedidos());
+    async function carregarPedidos() {
+      try {
+        const pedidosDoServidor = await carregarPedidosDoServidor();
+        setPedidos(pedidosDoServidor);
+        setFeedback("");
+      } catch (error) {
+        setPedidos(getPedidos());
+        setFeedback(
+          error instanceof Error
+            ? error.message
+            : "Não foi possível carregar os pedidos do servidor.",
+        );
+      }
 
       try {
         const usuarioSalvo = window.localStorage.getItem(
@@ -176,14 +188,18 @@ export default function PedidosPage() {
       }
     }
 
-    carregarPedidos();
+    function atualizarPedidos() {
+      void carregarPedidos();
+    }
 
-    window.addEventListener(PEDIDOS_UPDATED_EVENT, carregarPedidos);
-    window.addEventListener("storage", carregarPedidos);
+    void carregarPedidos();
+
+    window.addEventListener(PEDIDOS_UPDATED_EVENT, atualizarPedidos);
+    window.addEventListener("storage", atualizarPedidos);
 
     return () => {
-      window.removeEventListener(PEDIDOS_UPDATED_EVENT, carregarPedidos);
-      window.removeEventListener("storage", carregarPedidos);
+      window.removeEventListener(PEDIDOS_UPDATED_EVENT, atualizarPedidos);
+      window.removeEventListener("storage", atualizarPedidos);
     };
   }, []);
 
@@ -237,16 +253,28 @@ export default function PedidosPage() {
     }
   }
 
-  function mudarStatus(pedidoId: string, status: PedidoStatus) {
-    atualizarStatusPedido(pedidoId, status);
-    setPedidos(getPedidos());
+  async function mudarStatus(pedidoId: string, status: PedidoStatus) {
+    try {
+      await atualizarStatusPedidoNoServidor(pedidoId, status);
+      setPedidos(getPedidos());
 
-    if (status === "EM_ANDAMENTO") {
-      setFeedback("Pedido movido para Pedidos em Andamento.");
-    }
+      if (status === "EM_ANDAMENTO") {
+        setFeedback("Pedido movido para Pedidos em Andamento.");
+      }
 
-    if (status === "FINALIZADO") {
-      setFeedback("Pedido movido para Finalizados.");
+      if (status === "FINALIZADO") {
+        setFeedback("Pedido movido para Finalizados.");
+      }
+
+      if (status === "RECEBIDO") {
+        setFeedback("Pedido movido para Pendentes.");
+      }
+    } catch (error) {
+      setFeedback(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar o status do pedido.",
+      );
     }
   }
 
@@ -493,7 +521,7 @@ export default function PedidosPage() {
                             value={pedido.status}
                             className={styles.statusSelect}
                             onChange={(event) =>
-                              mudarStatus(
+                              void mudarStatus(
                                 pedido.id,
                                 event.target.value as PedidoStatus,
                               )
