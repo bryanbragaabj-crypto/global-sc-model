@@ -13,11 +13,17 @@ const PEDIDOS_BUCKET = "pedido-anexos";
 const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 const MAX_ATTACHMENTS = 10;
 
-const ALLOWED_TYPES: Record<string, "PDF" | "PNG" | "JPG"> = {
+const ALLOWED_TYPES: Record<"PDF" | "PNG" | "JPG", string> = {
   PDF: "application/pdf",
   PNG: "image/png",
   JPG: "image/jpeg",
 };
+
+function isAllowedAttachmentType(
+  value: string,
+): value is "PDF" | "PNG" | "JPG" {
+  return value === "PDF" || value === "PNG" || value === "JPG";
+}
 
 type ArquivoSolicitado = {
   id?: unknown;
@@ -76,7 +82,7 @@ export async function POST(request: Request) {
       const tamanho =
         typeof arquivo.tamanho === "number" ? arquivo.tamanho : Number.NaN;
 
-      if (!isSafeId(id) || !nome || !ALLOWED_TYPES[tipo]) {
+      if (!isSafeId(id) || !nome || !isAllowedAttachmentType(tipo)) {
         return NextResponse.json(
           { ok: false, message: "Um dos anexos é inválido." },
           { status: 400 },
