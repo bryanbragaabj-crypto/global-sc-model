@@ -261,9 +261,12 @@ export default function DetalhePedidoPage() {
   const primaryAction = getPrimaryAction(pedido.status);
 
   function atualizarStatus() {
-    if (pedido.status === "FINALIZADO") {
-      return;
-    }
+  if (!pedido) {
+    return;
+  }
+
+  if (pedido.status === "FINALIZADO") 
+    {
 
     const pedidoAtualizado = atualizarStatusPedido(
       pedido.id,
