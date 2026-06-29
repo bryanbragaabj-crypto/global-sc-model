@@ -30,7 +30,7 @@ const catalogos = [
     title: "Acessórios de Inverno",
     description:
       "Lenços, toucas, luvas e lingerie.",
-    file: "acessorios-de-inverno.pdf",
+    file: "acessorios-inverno.pdf",
   },
   {
     title: "Acessórios Diversos",
