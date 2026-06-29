@@ -137,7 +137,7 @@ export async function POST(request: Request) {
     }> = [];
 
     for (const file of attachmentFiles) {
-      const tipo = ALLOWED_FILE_TYPES.get(file.type);
+      const tipo = ALLOWED_FILE_TYPES[file.type];
 
       if (!tipo) {
         return NextResponse.json(
