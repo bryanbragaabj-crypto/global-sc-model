@@ -291,7 +291,12 @@ export default function PedidosEmAndamentoPage() {
       }
 
       if (novoStatus === "RECEBIDO") {
-        setFeedback(`O pedido ${pedido.numero} voltou para Pedidos recebidos.`);
+        setPedidos((pedidosAtuais) =>
+          pedidosAtuais.filter((item) => item.id !== pedido.id),
+        );
+
+        window.location.href = "/admin/pedidos";
+        return;
       }
     } catch (error) {
       setFeedback(
