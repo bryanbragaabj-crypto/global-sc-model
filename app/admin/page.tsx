@@ -5,15 +5,14 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./admin.module.css";
 
-/*
-  Credenciais iniciais para apresentação.
-  Esta validação impede entrar no painel com dados vazios ou incorretos.
-*/
-const LOGIN_ADMIN = {
-  email: "admin@globalsc.com.br",
-  senha: "GlobalSC@2026",
-  nome: "Admin Global SC",
-  perfil: "Administrador Master",
+type LoginResponse = {
+  ok?: boolean;
+  message?: string;
+  usuario?: {
+    nome?: string;
+    perfil?: string;
+    email?: string;
+  };
 };
 
 function MailIcon() {
@@ -77,7 +76,7 @@ export default function AdminLoginPage() {
     setFeedback(texto);
   }
 
-  function entrarNoPainel(event: FormEvent<HTMLFormElement>) {
+  async function entrarNoPainel(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const emailDigitado = email.trim().toLowerCase();
@@ -88,26 +87,48 @@ export default function AdminLoginPage() {
       return;
     }
 
-    if (
-      emailDigitado !== LOGIN_ADMIN.email ||
-      senhaDigitada !== LOGIN_ADMIN.senha
-    ) {
-      mostrarMensagem("E-mail ou senha incorretos.");
-      return;
+    try {
+      const resposta = await fetch("/api/admin-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: emailDigitado,
+          senha: senhaDigitada,
+          lembrar,
+        }),
+      });
+
+      const dados = (await resposta.json()) as LoginResponse;
+
+      if (!resposta.ok || dados.ok !== true) {
+        mostrarMensagem(dados.message || "E-mail ou senha incorretos.");
+        return;
+      }
+
+      /*
+        Mantém os dados locais apenas para exibir nome e perfil no painel.
+        O bloqueio real das rotas será feito pelo cookie HttpOnly criado no servidor.
+      */
+      window.localStorage.setItem(
+        "global-sc-usuario-logado",
+        JSON.stringify({
+          autenticado: true,
+          nome: dados.usuario?.nome || "Admin Global SC",
+          perfil: dados.usuario?.perfil || "Administrador Master",
+          email: dados.usuario?.email || emailDigitado,
+          lembrar,
+        }),
+      );
+
+      router.replace("/admin/painel");
+      router.refresh();
+    } catch {
+      mostrarMensagem(
+        "Não foi possível validar o acesso agora. Tente novamente.",
+      );
     }
-
-    window.localStorage.setItem(
-      "global-sc-usuario-logado",
-      JSON.stringify({
-        autenticado: true,
-        nome: LOGIN_ADMIN.nome,
-        perfil: LOGIN_ADMIN.perfil,
-        email: LOGIN_ADMIN.email,
-        lembrar,
-      }),
-    );
-
-    router.push("/admin/painel");
   }
 
   return (
