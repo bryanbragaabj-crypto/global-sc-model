@@ -48,6 +48,8 @@ const suppliers: Supplier[] = [
       "Carteiras",
       "cintos",
       "brinquedos",
+      "touca",
+      "gorro"
     ],
     keywords: [
       "inovare",
@@ -74,6 +76,7 @@ const suppliers: Supplier[] = [
       "Fitness",
       "Luva",
       "Touca",
+      "gorro",
       "Gorro adulto e infantil",
       "Cachecóis e lenços",
       "Acessório de cabelo unha e maquiagem",
