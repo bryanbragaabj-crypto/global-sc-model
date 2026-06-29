@@ -1,0 +1,714 @@
+.page {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #f5f5f5;
+  color: #121212;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.page * {
+  box-sizing: border-box;
+}
+
+.page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page button {
+  font: inherit;
+}
+
+.container {
+  width: min(100%, 1260px);
+  margin: 0 auto;
+  padding-right: clamp(10px, 1.3vw, 18px);
+  padding-left: clamp(10px, 1.3vw, 18px);
+}
+
+/* CABEÇALHO */
+
+.header {
+  background: #ffffff;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.headerContent {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 26px;
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: clamp(25px, 4vw, 62px);
+}
+
+.navigation a {
+  color: #171717;
+  font-size: clamp(14px, 1.2vw, 19px);
+  font-weight: 500;
+}
+
+.navigation a:hover {
+  color: #916b1e;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+}
+
+.orderButton {
+  display: inline-flex;
+  min-height: 43px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 21px;
+  border: 1.5px solid #916b1e;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #171717;
+  font-size: clamp(10px, 0.9vw, 13px);
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-align: center;
+}
+
+.orderButton:hover {
+  background: #916b1e;
+  color: #ffffff;
+}
+
+.adminButton {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+}
+
+.adminButton svg {
+  width: 36px;
+  height: 36px;
+  fill: #111111;
+}
+
+.adminButton:hover svg {
+  fill: #916b1e;
+}
+
+/* FAIXA PRETA COM LOGO */
+
+.brandSection {
+  padding: 0;
+  background: #f5f5f5;
+}
+
+.brandRail {
+  display: flex;
+  width: min(60%, 760px);
+  min-height: 72px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 7px 16px 7px 14px;
+  border-radius: 0 42px 42px 0;
+  background: #050505;
+  overflow: hidden;
+}
+
+.brandLogoImage {
+  display: block;
+  width: clamp(135px, 13vw, 190px);
+  height: 56px;
+  margin-left: auto;
+  object-fit: contain;
+  object-position: right center;
+}
+
+/* FAQ */
+
+.contentSection {
+  padding: 26px 0 48px;
+  background: #f5f5f5;
+}
+
+.faqPanel {
+  padding: clamp(28px, 4vw, 52px);
+  border: 2px solid #2d2147;
+  border-radius: 28px;
+  background: #ffffff;
+}
+
+.faqPanel h1 {
+  margin: 0 0 38px;
+  font-size: clamp(25px, 2.5vw, 36px);
+  font-weight: 800;
+  letter-spacing: 0.7px;
+}
+
+.optionsGrid {
+  display: grid;
+  grid-template-areas:
+    "question1 question2"
+    "question3 question4"
+    "question5 question6";
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 84px;
+}
+
+.optionsGrid > :nth-child(1) {
+  grid-area: question1;
+}
+
+.optionsGrid > :nth-child(2) {
+  grid-area: question2;
+}
+
+.optionsGrid > :nth-child(3) {
+  grid-area: question3;
+}
+
+.optionsGrid > :nth-child(4) {
+  grid-area: question4;
+}
+
+.optionsGrid > :nth-child(5) {
+  grid-area: question5;
+}
+
+.optionsGrid > :nth-child(6) {
+  grid-area: question6;
+}
+
+.optionButton {
+  min-height: 58px;
+  padding: 12px 18px;
+  border: 1.5px solid #adadad;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #151515;
+  cursor: pointer;
+  font-size: clamp(13px, 1.15vw, 18px);
+  font-weight: 800;
+  letter-spacing: 0.35px;
+  text-align: center;
+}
+
+.optionButton:hover {
+  border-color: #916b1e;
+}
+
+.optionButtonActive {
+  border-color: #b5ad87;
+  background: #fff8df;
+  text-decoration: underline;
+}
+
+.answerSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 32px;
+}
+
+.answerTitle {
+  padding: 15px 42px;
+  border: 1.5px solid #b8b8b8;
+  border-radius: 999px;
+  background: #fff8df;
+  font-size: clamp(14px, 1.3vw, 19px);
+  font-weight: 800;
+  letter-spacing: 0.35px;
+  text-align: center;
+}
+
+.answerLine {
+  width: min(100%, 320px);
+  height: 4px;
+  margin: 10px 0 30px;
+  background: #111111;
+}
+
+.answerBox {
+  width: 100%;
+  padding: clamp(25px, 3vw, 38px);
+  border: 1.5px solid #b9b9b9;
+  border-radius: 38px;
+  background: #ffffff;
+}
+
+.answerBox p {
+  margin: 0 0 13px;
+  font-size: clamp(15px, 1.35vw, 20px);
+  line-height: 1.42;
+  letter-spacing: 0.35px;
+}
+
+.answerBox p:last-child {
+  margin-bottom: 0;
+}
+
+.answerSubtitle {
+  margin-top: 22px !important;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.backButton {
+  display: flex;
+  width: 270px;
+  min-height: 64px;
+  align-items: center;
+  justify-content: center;
+  margin: 36px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #080808 0%, #4e3510 48%, #d39c13 100%);
+  color: #ffffff !important;
+  font-size: clamp(22px, 2.3vw, 32px);
+  font-weight: 800;
+  text-align: center;
+}
+
+/* BOTÕES INFERIORES */
+
+.quickActions {
+  padding: 14px 0 12px;
+  background: #f5f5f5;
+}
+
+.quickActionsContent {
+  display: flex;
+  justify-content: center;
+  gap: clamp(24px, 4vw, 48px);
+}
+
+.quickActions a {
+  display: flex;
+  width: min(100%, 305px);
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1.4px solid #eadb9c;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #202020;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-align: center;
+}
+
+.quickActions a:hover {
+  background: #916b1e;
+  color: #ffffff;
+}
+
+/* FAIXA DE SERVIÇOS */
+
+.serviceStrip {
+  padding: 14px 0;
+  background: #ffffff;
+}
+
+.serviceStripContent {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 38px;
+}
+
+.serviceCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.serviceCard > svg {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #b98a21;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4px;
+}
+
+.serviceCard h2 {
+  margin: 0 0 3px;
+  color: #181818;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.serviceCard p {
+  margin: 0;
+  color: #555555;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* RODAPÉ */
+
+.footer {
+  background: #ffffff;
+}
+
+.footerMain {
+  background: #eeeeee;
+}
+
+.footerMainContent {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 300px)
+    minmax(260px, 360px)
+    minmax(170px, 220px)
+    minmax(230px, 300px);
+  min-height: 310px;
+  align-items: start;
+  justify-content: space-between;
+  padding-top: 18px;
+}
+
+.footerColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.footerColumn h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  color: #151515;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.footerColumn h2 svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #b98a21;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2px;
+}
+
+.footerChip {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  background: #c9971c;
+  color: #ffffff !important;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.footerChip:hover {
+  background: #b88715;
+  color: #ffffff !important;
+}
+
+.footerChip svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2px;
+}
+
+/* Os botões de políticas não terão ícones */
+
+.footerColumn:nth-child(2) .footerChip svg {
+  display: none;
+}
+
+.tiagoArea {
+  display: flex;
+  min-height: 310px;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.tiagoImage {
+  display: block;
+  width: 300px;
+  height: auto;
+  object-fit: contain;
+}
+
+.footerNotice {
+  background: #ffffff;
+}
+
+.footerNotice .container {
+  padding-top: 10px;
+  padding-bottom: 8px;
+}
+
+.footerNotice p {
+  margin: 0;
+  color: #202020;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.footerBottom {
+  background: #080808;
+  color: #ffffff;
+  text-align: center;
+}
+
+.footerBottom .container {
+  padding-top: 11px;
+  padding-bottom: 14px;
+}
+
+.footerBottom p {
+  margin: 3px 0;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+/* WHATSAPP FIXO */
+
+.floatingWhatsapp {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  display: grid;
+  width: 57px;
+  height: 57px;
+  place-items: center;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #20bd5a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.floatingWhatsapp svg {
+  width: 31px;
+  height: 31px;
+  fill: #ffffff;
+}
+
+/* CELULAR */
+
+@media (max-width: 900px) {
+  .container {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .headerContent {
+    min-height: auto;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .navigation {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .navigation a {
+    font-size: 11px;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .orderButton {
+    min-height: 35px;
+    padding: 0 12px;
+    font-size: 9px;
+  }
+
+  .adminButton {
+    width: 32px;
+    height: 32px;
+  }
+
+  .adminButton svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .brandRail {
+    width: 62%;
+    min-height: 60px;
+    padding: 5px 14px 5px 8px;
+    border-radius: 0 32px 32px 0;
+  }
+
+  .brandLogoImage {
+    width: 135px;
+    height: 50px;
+  }
+
+  .contentSection {
+    padding-top: 16px;
+  }
+
+  .faqPanel {
+    padding: 25px 16px;
+    border-radius: 20px;
+  }
+
+  .faqPanel h1 {
+    margin-bottom: 25px;
+    font-size: 23px;
+  }
+
+  .optionsGrid {
+    grid-template-areas:
+      "question1"
+      "question2"
+      "question3"
+      "question4"
+      "question5"
+      "question6";
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .optionButton {
+    min-height: 48px;
+    font-size: 12px;
+  }
+
+  .answerSection {
+    padding-top: 25px;
+  }
+
+  .answerTitle {
+    width: min(100%, 330px);
+    padding: 13px 18px;
+    font-size: 12px;
+  }
+
+  .answerLine {
+    width: 220px;
+    margin-bottom: 24px;
+  }
+
+  .answerBox {
+    padding: 22px 18px;
+    border-radius: 24px;
+  }
+
+  .answerBox p {
+    font-size: 14px;
+  }
+
+  .backButton {
+    width: 210px;
+    min-height: 54px;
+    margin: 28px auto 0;
+    font-size: 23px;
+  }
+
+  .quickActionsContent {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .quickActions a {
+    width: 100%;
+  }
+
+  .serviceStripContent,
+  .footerMainContent {
+    grid-template-columns: 1fr;
+  }
+
+  .serviceStripContent {
+    gap: 18px;
+  }
+
+  .footerMainContent {
+    min-height: auto;
+    gap: 22px;
+    padding-top: 18px;
+    padding-bottom: 0;
+  }
+
+  .footerColumn {
+    align-items: center;
+  }
+
+  .footerColumn h2 {
+    justify-content: center;
+  }
+
+  .footerChip {
+    min-height: 30px;
+    padding: 6px 14px;
+    font-size: 11px;
+  }
+
+  .tiagoArea {
+    min-height: 260px;
+    justify-content: center;
+  }
+
+  .tiagoImage {
+    width: 240px;
+  }
+
+  .footerNotice {
+    text-align: center;
+  }
+
+  .footerNotice p {
+    font-size: 9px;
+  }
+
+  .footerBottom p {
+    font-size: 9px;
+  }
+
+  .floatingWhatsapp {
+    right: 16px;
+    bottom: 16px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .floatingWhatsapp svg {
+    width: 28px;
+    height: 28px;
+  }
+}

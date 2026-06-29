@@ -1,0 +1,217 @@
+.page,
+.page * {
+  box-sizing: border-box;
+}
+
+.page {
+  min-height: 100vh;
+  background: #f6f6f5;
+  color: #1c1c1c;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.header {
+  border-bottom: 1px solid rgba(204, 151, 22, 0.4);
+  background:
+    radial-gradient(circle at 88% -80%, rgba(224, 174, 55, 0.26), transparent 42%),
+    linear-gradient(135deg, #070707 0%, #181818 60%, #080808 100%);
+}
+
+.headerContent {
+  display: flex;
+  width: min(1180px, calc(100% - 40px));
+  min-height: 236px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  margin: 0 auto;
+  padding: 34px 0;
+}
+
+.header span {
+  color: #e3b03d;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.header h1 {
+  margin: 11px 0 8px;
+  color: #ffffff;
+  font-size: clamp(31px, 4vw, 50px);
+  line-height: 1.05;
+}
+
+.header p {
+  margin: 0;
+  color: #e9e9e9;
+  font-size: 16px;
+}
+
+.backButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid #d7a32e;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.content {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 42px 0 58px;
+}
+
+.intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+.intro p {
+  margin: 0;
+  color: #5e5e5e;
+  font-size: 15px;
+}
+
+.badge {
+  display: inline-flex;
+  min-height: 33px;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid #d5a030;
+  border-radius: 50px;
+  background: #fffaf0;
+  color: #9c6b0c;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.catalogCard {
+  position: relative;
+  display: flex;
+  min-height: 264px;
+  flex-direction: column;
+  padding: 23px;
+  border: 1px solid #e1dfda;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 9px 22px rgba(0, 0, 0, 0.055);
+}
+
+.number {
+  position: absolute;
+  top: 18px;
+  right: 19px;
+  color: #dedbd3;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.iconBox {
+  display: grid;
+  width: 53px;
+  height: 53px;
+  place-items: center;
+  border: 1px solid #d39a1f;
+  border-radius: 12px;
+  color: #bd8309;
+}
+
+.iconBox svg,
+.openButton svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.iconBox svg {
+  width: 27px;
+  height: 27px;
+}
+
+.catalogCard h2 {
+  margin: 20px 0 8px;
+  color: #202020;
+  font-size: 20px;
+}
+
+.catalogCard p {
+  margin: 0;
+  color: #606060;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.openButton {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 0 13px;
+  border: 1px solid #c58c13;
+  border-radius: 7px;
+  background: #fffaf0;
+  color: #a26c06;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.openButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.openButton:hover,
+.backButton:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 860px) {
+  .headerContent,
+  .intro {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .headerContent,
+  .content {
+    width: min(100% - 28px, 1180px);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .catalogCard {
+    min-height: 235px;
+  }
+}

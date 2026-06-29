@@ -1,0 +1,590 @@
+.page {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #f5f5f5;
+  color: #121212;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.page * {
+  box-sizing: border-box;
+}
+
+.page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page button {
+  font: inherit;
+}
+
+.container {
+  width: min(100%, 1260px);
+  margin: 0 auto;
+  padding-right: clamp(10px, 1.3vw, 18px);
+  padding-left: clamp(10px, 1.3vw, 18px);
+}
+
+/* CABEÇALHO */
+
+.header {
+  background: #ffffff;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.headerContent {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 26px;
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: clamp(25px, 4vw, 62px);
+}
+
+.navigation a {
+  color: #171717;
+  font-size: clamp(14px, 1.2vw, 19px);
+  font-weight: 500;
+}
+
+.navigation a:hover,
+.navigationActive {
+  color: #916b1e !important;
+  font-weight: 700 !important;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+}
+
+.orderButton {
+  display: inline-flex;
+  min-height: 43px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 21px;
+  border: 1.5px solid #916b1e;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #171717;
+  font-size: clamp(10px, 0.9vw, 13px);
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-align: center;
+}
+
+.orderButton:hover {
+  background: #916b1e;
+  color: #ffffff;
+}
+
+.adminButton {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+}
+
+.adminButton svg {
+  width: 36px;
+  height: 36px;
+  fill: #111111;
+}
+
+.adminButton:hover svg {
+  fill: #916b1e;
+}
+
+/* BANNER PRINCIPAL */
+
+.heroSection {
+  background: #ffffff;
+}
+
+.heroImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* SOBRE NÓS */
+
+.aboutSection {
+  padding: 72px 0 52px;
+  background: #f5f5f5;
+}
+
+.aboutContent {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+  gap: clamp(34px, 5vw, 70px);
+  align-items: start;
+}
+
+.sideMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sideMenuButton {
+  position: relative;
+  display: flex;
+  min-height: 55px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 19px;
+  border: 1px solid #d6d6d6;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #a08323;
+  cursor: pointer;
+  font-size: clamp(18px, 1.6vw, 24px);
+  font-weight: 800;
+  text-align: left;
+}
+
+.sideMenuButton span {
+  display: block;
+  width: 3px;
+  height: 30px;
+  border-radius: 999px;
+  background: #c8a129;
+}
+
+.sideMenuButtonActive {
+  background: #fff9df;
+  border-color: #e0d4a1;
+}
+
+.aboutTextBox {
+  padding-top: 2px;
+  color: #202020;
+}
+
+.aboutTextBox p {
+  margin: 0 0 12px;
+  font-size: clamp(17px, 1.45vw, 21px);
+  line-height: 1.55;
+  letter-spacing: 0.35px;
+}
+
+.backButton {
+  display: flex;
+  width: 270px;
+  min-height: 64px;
+  align-items: center;
+  justify-content: center;
+  margin: 58px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #080808 0%, #4e3510 48%, #d39c13 100%);
+  color: #ffffff !important;
+  font-size: clamp(22px, 2.3vw, 32px);
+  font-weight: 800;
+  text-align: center;
+}
+
+/* BOTÕES INFERIORES */
+
+.quickActions {
+  padding: 14px 0 12px;
+  background: #f5f5f5;
+}
+
+.quickActionsContent {
+  display: flex;
+  justify-content: center;
+  gap: clamp(24px, 4vw, 48px);
+}
+
+.quickActions a {
+  display: flex;
+  width: min(100%, 305px);
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1.4px solid #eadb9c;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #202020;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-align: center;
+}
+
+.quickActions a:hover {
+  background: #916b1e;
+  color: #ffffff;
+}
+
+/* FAIXA DE SERVIÇOS */
+
+.serviceStrip {
+  padding: 14px 0;
+  background: #ffffff;
+}
+
+.serviceStripContent {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 38px;
+}
+
+.serviceCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.serviceCard > svg {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #b98a21;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4px;
+}
+
+.serviceCard h2 {
+  margin: 0 0 3px;
+  color: #181818;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.serviceCard p {
+  margin: 0;
+  color: #555555;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* RODAPÉ */
+
+.footer {
+  background: #ffffff;
+}
+
+.footerMain {
+  background: #eeeeee;
+}
+
+.footerMainContent {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 300px)
+    minmax(260px, 360px)
+    minmax(170px, 220px)
+    minmax(230px, 300px);
+  min-height: 310px;
+  align-items: start;
+  justify-content: space-between;
+  padding-top: 18px;
+}
+
+.footerColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.footerColumn h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  color: #151515;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.footerColumn h2 svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #b98a21;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2px;
+}
+
+.footerChip {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  background: #c9971c;
+  color: #ffffff !important;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.footerChip:hover {
+  background: #b88715;
+  color: #ffffff !important;
+}
+
+.footerChip svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2px;
+}
+
+.footerColumn:nth-child(2) .footerChip svg {
+  display: none;
+}
+
+.tiagoArea {
+  display: flex;
+  min-height: 310px;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.tiagoImage {
+  display: block;
+  width: 300px;
+  height: auto;
+  object-fit: contain;
+}
+
+.footerNotice {
+  background: #ffffff;
+}
+
+.footerNotice .container {
+  padding-top: 10px;
+  padding-bottom: 8px;
+}
+
+.footerNotice p {
+  margin: 0;
+  color: #202020;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.footerBottom {
+  background: #080808;
+  color: #ffffff;
+  text-align: center;
+}
+
+.footerBottom .container {
+  padding-top: 11px;
+  padding-bottom: 14px;
+}
+
+.footerBottom p {
+  margin: 3px 0;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+/* WHATSAPP FIXO */
+
+.floatingWhatsapp {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  display: grid;
+  width: 57px;
+  height: 57px;
+  place-items: center;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #20bd5a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.floatingWhatsapp svg {
+  width: 31px;
+  height: 31px;
+  fill: #ffffff;
+}
+
+/* CELULAR */
+
+@media (max-width: 900px) {
+  .container {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .headerContent {
+    min-height: auto;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .navigation {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .navigation a {
+    font-size: 11px;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .orderButton {
+    min-height: 35px;
+    padding: 0 12px;
+    font-size: 9px;
+  }
+
+  .adminButton {
+    width: 32px;
+    height: 32px;
+  }
+
+  .adminButton svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .aboutSection {
+    padding: 38px 0 40px;
+  }
+
+  .aboutContent {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  .sideMenu {
+    gap: 10px;
+  }
+
+  .sideMenuButton {
+    min-height: 48px;
+    font-size: 17px;
+  }
+
+  .sideMenuButton span {
+    height: 25px;
+  }
+
+  .aboutTextBox p {
+    font-size: 15px;
+  }
+
+  .backButton {
+    width: 210px;
+    min-height: 54px;
+    margin: 32px auto 0;
+    font-size: 23px;
+  }
+
+  .quickActionsContent {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .quickActions a {
+    width: 100%;
+  }
+
+  .serviceStripContent,
+  .footerMainContent {
+    grid-template-columns: 1fr;
+  }
+
+  .serviceStripContent {
+    gap: 18px;
+  }
+
+  .footerMainContent {
+    min-height: auto;
+    gap: 22px;
+    padding-top: 18px;
+    padding-bottom: 0;
+  }
+
+  .footerColumn {
+    align-items: center;
+  }
+
+  .footerColumn h2 {
+    justify-content: center;
+  }
+
+  .footerChip {
+    min-height: 30px;
+    padding: 6px 14px;
+    font-size: 11px;
+  }
+
+  .tiagoArea {
+    min-height: 260px;
+    justify-content: center;
+  }
+
+  .tiagoImage {
+    width: 240px;
+  }
+
+  .footerNotice {
+    text-align: center;
+  }
+
+  .footerNotice p {
+    font-size: 9px;
+  }
+
+  .footerBottom p {
+    font-size: 9px;
+  }
+
+  .floatingWhatsapp {
+    right: 16px;
+    bottom: 16px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .floatingWhatsapp svg {
+    width: 28px;
+    height: 28px;
+  }
+}

@@ -1,0 +1,145 @@
+.termsSection {
+  padding: 52px 0 58px;
+  background: #f5f5f5;
+}
+
+.termsHeading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.termsHeading h1 {
+  margin: 0;
+  color: #171717;
+  font-size: clamp(25px, 3vw, 42px);
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  text-align: center;
+}
+
+.termsLine {
+  width: min(360px, 72vw);
+  height: 4px;
+  margin-top: 13px;
+  border-radius: 999px;
+  background: #c8941d;
+}
+
+.termsCard {
+  margin-top: 32px;
+  padding: clamp(25px, 4vw, 48px);
+  border: 1px solid #d6d6d6;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.05);
+}
+
+.termsBlock {
+  margin-bottom: 28px;
+}
+
+.termsBlock:last-of-type {
+  margin-bottom: 0;
+}
+
+.termsBlock h2 {
+  margin: 0 0 11px;
+  color: #b48118;
+  font-size: clamp(17px, 1.5vw, 22px);
+  font-weight: 900;
+  letter-spacing: 0.3px;
+}
+
+.termsBlock p {
+  margin: 0 0 10px;
+  color: #252525;
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 1.58;
+  letter-spacing: 0.2px;
+}
+
+.termsBlock p:last-child {
+  margin-bottom: 0;
+}
+
+.termsBlock ul {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 23px;
+  color: #252525;
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 1.5;
+}
+
+.termsBlock strong {
+  color: #9b7017;
+}
+
+.termsDate {
+  margin: 30px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid #e4e4e4;
+  color: #5a5a5a;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.backButton {
+  display: flex;
+  width: 270px;
+  min-height: 64px;
+  align-items: center;
+  justify-content: center;
+  margin: 42px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #080808 0%, #4e3510 48%, #d39c13 100%);
+  color: #ffffff;
+  font-size: clamp(22px, 2.3vw, 32px);
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+
+.backButton:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+@media (max-width: 900px) {
+  .termsSection {
+    padding: 34px 0 42px;
+  }
+
+  .termsHeading h1 {
+    font-size: 24px;
+  }
+
+  .termsCard {
+    margin-top: 25px;
+    padding: 24px 18px;
+    border-radius: 20px;
+  }
+
+  .termsBlock {
+    margin-bottom: 23px;
+  }
+
+  .termsBlock h2 {
+    font-size: 17px;
+  }
+
+  .termsBlock p,
+  .termsBlock ul {
+    font-size: 15px;
+    line-height: 1.52;
+  }
+
+  .backButton {
+    width: 210px;
+    min-height: 54px;
+    margin-top: 30px;
+    font-size: 23px;
+  }
+}

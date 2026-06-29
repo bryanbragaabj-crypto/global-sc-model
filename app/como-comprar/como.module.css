@@ -1,0 +1,197 @@
+.howSection {
+  padding: 52px 0 58px;
+  background: #f5f5f5;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.heading h1 {
+  margin: 0;
+  color: #171717;
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 900;
+  letter-spacing: 0.9px;
+  text-align: center;
+}
+
+.headingLine {
+  width: min(220px, 56vw);
+  height: 4px;
+  margin-top: 13px;
+  border-radius: 999px;
+  background: #c8941d;
+}
+
+.intro {
+  width: min(100%, 900px);
+  margin: 28px auto 34px;
+  color: #282828;
+  font-size: clamp(16px, 1.35vw, 20px);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.stepCard {
+  display: flex;
+  min-height: 150px;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #dedede;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.04);
+}
+
+.stepCard:last-child {
+  grid-column: 1 / -1;
+  width: calc(50% - 11px);
+  justify-self: center;
+}
+
+.stepNumber {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #c8941d;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.stepCard h2 {
+  margin: 2px 0 9px;
+  color: #a87816;
+  font-size: clamp(18px, 1.45vw, 22px);
+  font-weight: 900;
+}
+
+.stepCard p {
+  margin: 0;
+  color: #282828;
+  font-size: clamp(14px, 1.15vw, 17px);
+  line-height: 1.52;
+}
+
+.importantBox {
+  width: min(100%, 920px);
+  margin: 34px auto 0;
+  padding: 24px 28px;
+  border-left: 5px solid #c8941d;
+  border-radius: 8px;
+  background: #fff8df;
+}
+
+.importantBox h2 {
+  margin: 0 0 12px;
+  color: #9d7017;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+}
+
+.importantBox p {
+  margin: 0 0 10px;
+  color: #292929;
+  font-size: clamp(14px, 1.2vw, 17px);
+  line-height: 1.55;
+}
+
+.importantBox p:last-child {
+  margin-bottom: 0;
+}
+
+.backButton {
+  display: flex;
+  width: 270px;
+  min-height: 64px;
+  align-items: center;
+  justify-content: center;
+  margin: 42px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #080808 0%, #4e3510 48%, #d39c13 100%);
+  color: #ffffff;
+  font-size: clamp(22px, 2.3vw, 32px);
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+
+.backButton:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+@media (max-width: 900px) {
+  .howSection {
+    padding: 34px 0 42px;
+  }
+
+  .heading h1 {
+    font-size: 27px;
+  }
+
+  .intro {
+    margin: 22px auto 28px;
+    font-size: 15px;
+  }
+
+  .stepsGrid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .stepCard,
+  .stepCard:last-child {
+    width: 100%;
+    min-height: auto;
+    grid-column: auto;
+    padding: 20px 17px;
+  }
+
+  .stepNumber {
+    width: 40px;
+    height: 40px;
+    font-size: 21px;
+  }
+
+  .stepCard h2 {
+    font-size: 18px;
+  }
+
+  .stepCard p {
+    font-size: 14px;
+  }
+
+  .importantBox {
+    margin-top: 25px;
+    padding: 20px 17px;
+  }
+
+  .importantBox h2 {
+    font-size: 18px;
+  }
+
+  .importantBox p {
+    font-size: 14px;
+  }
+
+  .backButton {
+    width: 210px;
+    min-height: 54px;
+    margin-top: 30px;
+    font-size: 23px;
+  }
+}
