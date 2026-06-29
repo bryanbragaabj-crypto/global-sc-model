@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
+  encodeStoragePath,
   getErrorMessage,
   getSupabaseHeaders,
   getSupabaseServerConfig,
@@ -8,6 +9,9 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const PEDIDOS_BUCKET = "pedido-anexos";
+const URL_ANEXO_EXPIRA_EM_SEGUNDOS = 60 * 60;
 
 type PedidoAnexoBanco = {
   id?: string;
@@ -57,14 +61,75 @@ function formatOrderDate(value?: string | null) {
 
 async function verificarAdmin() {
   const cookieStore = await cookies();
-
   return cookieStore.get("global-sc-admin-session")?.value === "autorizado";
 }
 
-function formatarPedido(pedido: PedidoBanco) {
+async function criarUrlAssinada(caminho: string) {
+  if (!caminho) {
+    return "";
+  }
+
+  const config = getSupabaseServerConfig();
+  const response = await fetch(
+    `${config.url}/storage/v1/object/sign/${PEDIDOS_BUCKET}/${encodeStoragePath(
+      caminho,
+    )}`,
+    {
+      method: "POST",
+      headers: getSupabaseHeaders(config, {
+        "Content-Type": "application/json",
+      }),
+      body: JSON.stringify({
+        expiresIn: URL_ANEXO_EXPIRA_EM_SEGUNDOS,
+      }),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    return "";
+  }
+
+  const data = (await response.json()) as {
+    signedURL?: string;
+    signedUrl?: string;
+    url?: string;
+  };
+
+  const urlAssinada = data.signedURL || data.signedUrl || data.url || "";
+
+  if (!urlAssinada) {
+    return "";
+  }
+
+  if (urlAssinada.startsWith("http")) {
+    return urlAssinada;
+  }
+
+  return `${config.url}/storage/v1${
+    urlAssinada.startsWith("/") ? urlAssinada : `/${urlAssinada}`
+  }`;
+}
+
+async function formatarPedido(pedido: PedidoBanco) {
   const anexosOriginais = Array.isArray(pedido.anexos)
     ? pedido.anexos
     : [];
+
+  const anexos = await Promise.all(
+    anexosOriginais.map(async (anexo, index) => {
+      const caminho = anexo.caminho || "";
+
+      return {
+        id: anexo.id || `${pedido.id}-anexo-${index}`,
+        nome: anexo.nome || "Anexo",
+        tipo: anexo.tipo || "PDF",
+        tamanho: anexo.tamanho || "Não informado",
+        caminho,
+        url: caminho ? await criarUrlAssinada(caminho) : "",
+      };
+    }),
+  );
 
   return {
     id: pedido.id,
@@ -90,13 +155,7 @@ function formatarPedido(pedido: PedidoBanco) {
     responsavel: pedido.responsavel || "",
     dataFormatada: formatOrderDate(pedido.criado_em),
     criadoEm: pedido.criado_em || "",
-    anexos: anexosOriginais.map((anexo, index) => ({
-      id: anexo.id || `${pedido.id}-anexo-${index}`,
-      nome: anexo.nome || "Anexo",
-      tipo: anexo.tipo || "PDF",
-      tamanho: anexo.tamanho || "Não informado",
-      caminho: anexo.caminho || "",
-    })),
+    anexos,
   };
 }
 
@@ -123,7 +182,7 @@ export async function GET() {
     }
 
     const data = (await response.json()) as PedidoBanco[];
-    const pedidos = data.map(formatarPedido);
+    const pedidos = await Promise.all(data.map((pedido) => formatarPedido(pedido)));
 
     return NextResponse.json({ ok: true, pedidos });
   } catch (error) {
@@ -202,7 +261,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      pedido: formatarPedido(pedido),
+      pedido: await formatarPedido(pedido),
     });
   } catch (error) {
     return NextResponse.json(

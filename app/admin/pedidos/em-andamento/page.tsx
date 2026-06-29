@@ -12,7 +12,8 @@ import {
 import { Pedido, PedidoStatus, getStatusLabel } from "../pedidos-data";
 import {
   PEDIDOS_UPDATED_EVENT,
-  atualizarStatusPedido,
+  atualizarStatusPedidoNoServidor,
+  carregarPedidosDoServidor,
   getPedidos,
 } from "../pedidos-storage";
 import styles from "./em-andamento.module.css";
@@ -197,8 +198,19 @@ export default function PedidosEmAndamentoPage() {
   const [perfilUsuario, setPerfilUsuario] = useState("Administrador");
 
   useEffect(() => {
-    function carregarPedidos() {
-      setPedidos(getPedidos());
+    async function carregarPedidos() {
+      try {
+        const pedidosDoServidor = await carregarPedidosDoServidor();
+        setPedidos(pedidosDoServidor);
+        setFeedback("");
+      } catch (error) {
+        setPedidos(getPedidos());
+        setFeedback(
+          error instanceof Error
+            ? error.message
+            : "Não foi possível carregar os pedidos do servidor.",
+        );
+      }
 
       try {
         const usuarioSalvo = window.localStorage.getItem(
@@ -216,14 +228,18 @@ export default function PedidosEmAndamentoPage() {
       }
     }
 
-    carregarPedidos();
+    function atualizarPedidos() {
+      void carregarPedidos();
+    }
 
-    window.addEventListener(PEDIDOS_UPDATED_EVENT, carregarPedidos);
-    window.addEventListener("storage", carregarPedidos);
+    void carregarPedidos();
+
+    window.addEventListener(PEDIDOS_UPDATED_EVENT, atualizarPedidos);
+    window.addEventListener("storage", atualizarPedidos);
 
     return () => {
-      window.removeEventListener(PEDIDOS_UPDATED_EVENT, carregarPedidos);
-      window.removeEventListener("storage", carregarPedidos);
+      window.removeEventListener(PEDIDOS_UPDATED_EVENT, atualizarPedidos);
+      window.removeEventListener("storage", atualizarPedidos);
     };
   }, []);
 
@@ -254,7 +270,7 @@ export default function PedidosEmAndamentoPage() {
 
   const isOperador = perfilUsuario.toLowerCase().includes("operador");
 
-  function handleStatusChange(
+  async function handleStatusChange(
     event: ChangeEvent<HTMLSelectElement>,
     pedido: Pedido,
   ) {
@@ -266,17 +282,24 @@ export default function PedidosEmAndamentoPage() {
       return;
     }
 
-    atualizarStatusPedido(pedido.id, novoStatus);
+    try {
+      await atualizarStatusPedidoNoServidor(pedido.id, novoStatus);
+      setPedidos(getPedidos());
 
-    if (novoStatus === "FINALIZADO") {
-      setFeedback(`O pedido ${pedido.numero} foi movido para Finalizados.`);
+      if (novoStatus === "FINALIZADO") {
+        setFeedback(`O pedido ${pedido.numero} foi movido para Finalizados.`);
+      }
+
+      if (novoStatus === "RECEBIDO") {
+        setFeedback(`O pedido ${pedido.numero} voltou para Pedidos recebidos.`);
+      }
+    } catch (error) {
+      setFeedback(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar o status do pedido.",
+      );
     }
-
-    if (novoStatus === "RECEBIDO") {
-      setFeedback(`O pedido ${pedido.numero} voltou para Pedidos recebidos.`);
-    }
-
-    setPedidos(getPedidos());
   }
 
   function abrirPedido(pedidoId: string) {
@@ -567,7 +590,7 @@ export default function PedidosEmAndamentoPage() {
                               className={styles.statusSelect}
                               value={pedido.status}
                               onChange={(event) =>
-                                handleStatusChange(event, pedido)
+                                void handleStatusChange(event, pedido)
                               }
                             >
                               <option value="EM_ANDAMENTO">

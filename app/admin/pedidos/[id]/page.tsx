@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Pedido,
@@ -13,13 +13,13 @@ import {
 } from "../pedidos-data";
 import {
   PEDIDOS_UPDATED_EVENT,
-  atualizarPedido,
-  atualizarStatusPedido,
+  atualizarStatusPedidoNoServidor,
+  carregarPedidosDoServidor,
   getPedidos,
 } from "../pedidos-storage";
 import styles from "./detalhe.module.css";
 
-type ModalType = "RESPONDER" | "ENCAMINHAR" | "ANEXO" | null;
+type ModalType = "ANEXO" | null;
 
 function ArrowIcon() {
   return (
@@ -38,23 +38,6 @@ function MailIcon() {
   );
 }
 
-function ReplyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M9 8 4 12l5 4" />
-      <path d="M4 12h8a7 7 0 0 1 7 7" />
-    </svg>
-  );
-}
-
-function ForwardIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m14 8 5 4-5 4" />
-      <path d="M19 12h-8a7 7 0 0 0-7 7" />
-    </svg>
-  );
-}
 
 function CheckIcon() {
   return (
@@ -218,8 +201,14 @@ function getAttachmentSize(anexo: PedidoAnexo) {
   return anexoComTamanho.tamanho || "Não informado";
 }
 
+function getAttachmentUrl(anexo: PedidoAnexo) {
+  const anexoComUrl = anexo as PedidoAnexo & { url?: string };
+  return anexoComUrl.url || "";
+}
+
 export default function DetalhePedidoPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const pedidoId = params.id;
 
   const [pedido, setPedido] = useState<Pedido | null>(() => {
@@ -229,27 +218,43 @@ export default function DetalhePedidoPage() {
   const [modal, setModal] = useState<ModalType>(null);
   const [anexoSelecionado, setAnexoSelecionado] =
     useState<PedidoAnexo | null>(null);
-  const [mensagemResposta, setMensagemResposta] = useState("");
-  const [destinatario, setDestinatario] = useState("");
   const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
-    function carregarPedido() {
-      const pedidoEncontrado = getPedidos().find(
-        (item) => item.id === pedidoId,
-      );
+    let ativo = true;
 
-      setPedido(pedidoEncontrado || null);
+    async function carregarPedido() {
+      try {
+        const pedidosDoServidor = await carregarPedidosDoServidor();
+        const pedidoEncontrado = pedidosDoServidor.find(
+          (item) => item.id === pedidoId,
+        );
+
+        if (ativo) {
+          setPedido(pedidoEncontrado || null);
+        }
+      } catch {
+        const pedidoLocal = getPedidos().find((item) => item.id === pedidoId);
+
+        if (ativo) {
+          setPedido(pedidoLocal || null);
+        }
+      }
     }
 
-    carregarPedido();
+    function atualizarPedidoNaTela() {
+      void carregarPedido();
+    }
 
-    window.addEventListener(PEDIDOS_UPDATED_EVENT, carregarPedido);
-    window.addEventListener("storage", carregarPedido);
+    void carregarPedido();
+
+    window.addEventListener(PEDIDOS_UPDATED_EVENT, atualizarPedidoNaTela);
+    window.addEventListener("storage", atualizarPedidoNaTela);
 
     return () => {
-      window.removeEventListener(PEDIDOS_UPDATED_EVENT, carregarPedido);
-      window.removeEventListener("storage", carregarPedido);
+      ativo = false;
+      window.removeEventListener(PEDIDOS_UPDATED_EVENT, atualizarPedidoNaTela);
+      window.removeEventListener("storage", atualizarPedidoNaTela);
     };
   }, [pedidoId]);
 
@@ -265,7 +270,7 @@ export default function DetalhePedidoPage() {
 
   const primaryAction = getPrimaryAction(pedido.status);
 
-  function atualizarStatus() {
+  async function atualizarStatus() {
     if (!pedido) {
       return;
     }
@@ -275,112 +280,78 @@ export default function DetalhePedidoPage() {
       return;
     }
 
-    const pedidoAtualizado = atualizarStatusPedido(
-      pedido.id,
-      primaryAction.nextStatus,
-    );
+    try {
+      const pedidoAtualizado = await atualizarStatusPedidoNoServidor(
+        pedido.id,
+        primaryAction.nextStatus,
+      );
 
-    if (pedidoAtualizado) {
       setPedido(pedidoAtualizado);
 
       if (primaryAction.nextStatus === "EM_ANDAMENTO") {
-        setFeedback(
-          "Pedido marcado como Em andamento e enviado para a pasta correspondente.",
-        );
+        router.push("/admin/pedidos/em-andamento");
+        return;
       }
 
       if (primaryAction.nextStatus === "FINALIZADO") {
-        setFeedback(
-          "Pedido finalizado com sucesso e enviado para a pasta Finalizados.",
-        );
+        router.push("/admin/pedidos/finalizados");
       }
+    } catch (error) {
+      setFeedback(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar o status do pedido.",
+      );
     }
-  }
-
-  function encaminharPedido() {
-    if (!pedido) {
-      return;
-    }
-
-    if (!destinatario) {
-      setFeedback("Selecione um responsável para encaminhar o pedido.");
-      return;
-    }
-
-    const pedidoAtualizado = atualizarPedido(pedido.id, {
-      responsavel: destinatario,
-    });
-
-    if (pedidoAtualizado) {
-      setPedido(pedidoAtualizado);
-      setFeedback(`Pedido encaminhado para ${destinatario}.`);
-      setModal(null);
-      setDestinatario("");
-    }
-  }
-
-  function abrirWhatsapp() {
-    if (!pedido) {
-      return;
-    }
-
-    const telefone = normalizeWhatsapp(pedido.telefone);
-
-    if (!telefone) {
-      setFeedback("Este pedido não possui telefone cadastrado.");
-      return;
-    }
-
-    const texto = encodeURIComponent(
-      mensagemResposta ||
-        `Olá, ${pedido.representante}. Recebemos o seu pedido ${pedido.numero} e estamos analisando as informações.`,
-    );
-
-    window.open(
-      `https://wa.me/55${telefone}?text=${texto}`,
-      "_blank",
-      "noopener,noreferrer",
-    );
-  }
-
-  function abrirEmail() {
-    if (!pedido) {
-      return;
-    }
-
-    const assunto = encodeURIComponent(`Retorno sobre o pedido ${pedido.numero}`);
-    const corpo = encodeURIComponent(
-      mensagemResposta ||
-        `Olá, ${pedido.representante}.\n\nRecebemos o seu pedido ${pedido.numero} e estamos analisando as informações.\n\nAtenciosamente,\nEquipe Global SC`,
-    );
-
-    window.location.href = `mailto:${pedido.email}?subject=${assunto}&body=${corpo}`;
   }
 
   function abrirAnexo(anexo: PedidoAnexo) {
+    if (!getAttachmentUrl(anexo)) {
+      setFeedback(
+        "Não foi possível gerar o link seguro deste anexo. Atualize a página e tente novamente.",
+      );
+      return;
+    }
+
     setAnexoSelecionado(anexo);
     setModal("ANEXO");
   }
 
-  function baixarAnexo(anexo: PedidoAnexo) {
-    const conteudo = `Arquivo demonstrativo: ${anexo.nome}\nTipo: ${anexo.tipo}\nTamanho: ${getAttachmentSize(anexo)}`;
+  async function baixarAnexo(anexo: PedidoAnexo) {
+    const url = getAttachmentUrl(anexo);
 
-    const blob = new Blob([conteudo], {
-      type: "text/plain;charset=utf-8",
-    });
+    if (!url) {
+      setFeedback(
+        "Não foi possível gerar o link seguro para baixar este arquivo. Atualize a página e tente novamente.",
+      );
+      return;
+    }
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    try {
+      const response = await fetch(url);
 
-    link.href = url;
-    link.download = `${anexo.nome}.txt`;
-    link.click();
+      if (!response.ok) {
+        throw new Error("O arquivo não pôde ser baixado.");
+      }
 
-    URL.revokeObjectURL(url);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-    setFeedback(
-      "O download demonstrativo foi iniciado. Os arquivos reais serão vinculados quando o armazenamento estiver conectado.",
-    );
+      link.href = objectUrl;
+      link.download = anexo.nome;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (error) {
+      setFeedback(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível baixar o anexo. Tente novamente.",
+      );
+    }
   }
 
   return (
@@ -428,21 +399,11 @@ export default function DetalhePedidoPage() {
             </div>
 
             <div className={styles.actions}>
-              <button type="button" onClick={() => setModal("RESPONDER")}>
-                <ReplyIcon />
-                Responder
-              </button>
-
-              <button type="button" onClick={() => setModal("ENCAMINHAR")}>
-                <ForwardIcon />
-                Encaminhar
-              </button>
-
               <button
                 type="button"
                 className={styles.primaryAction}
                 disabled={pedido.status === "FINALIZADO"}
-                onClick={atualizarStatus}
+                onClick={() => void atualizarStatus()}
               >
                 <CheckIcon />
                 {primaryAction.label}
@@ -602,7 +563,7 @@ export default function DetalhePedidoPage() {
                         <button
                           type="button"
                           title="Baixar arquivo"
-                          onClick={() => baixarAnexo(anexo)}
+                          onClick={() => void baixarAnexo(anexo)}
                         >
                           <DownloadIcon />
                         </button>
@@ -727,97 +688,9 @@ export default function DetalhePedidoPage() {
         </section>
       </div>
 
-      {modal === "RESPONDER" && (
-        <div className={styles.modalOverlay}>
-          <section className={styles.modal}>
-            <button
-              type="button"
-              className={styles.closeButton}
-              onClick={() => setModal(null)}
-              aria-label="Fechar"
-            >
-              <CloseIcon />
-            </button>
-
-            <h2>Responder ao cliente</h2>
-
-            <p>
-              A resposta pode ser enviada pelo WhatsApp ou pelo e-mail
-              informado no pedido.
-            </p>
-
-            <textarea
-              value={mensagemResposta}
-              onChange={(event) => setMensagemResposta(event.target.value)}
-              placeholder="Digite sua mensagem para o cliente"
-            />
-
-            <div className={styles.modalActions}>
-              <button type="button" onClick={abrirEmail}>
-                Enviar por E-mail
-              </button>
-
-              <button
-                type="button"
-                className={styles.modalPrimary}
-                onClick={abrirWhatsapp}
-              >
-                Abrir WhatsApp
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {modal === "ENCAMINHAR" && (
-        <div className={styles.modalOverlay}>
-          <section className={styles.modal}>
-            <button
-              type="button"
-              className={styles.closeButton}
-              onClick={() => setModal(null)}
-              aria-label="Fechar"
-            >
-              <CloseIcon />
-            </button>
-
-            <h2>Encaminhar pedido</h2>
-
-            <p>Selecione o responsável que assumirá este pedido.</p>
-
-            <select
-              value={destinatario}
-              onChange={(event) => setDestinatario(event.target.value)}
-            >
-              <option value="">Selecione um responsável</option>
-              <option value="Operador 01">Operador 01</option>
-              <option value="Operador 02">Operador 02</option>
-              <option value="Operador 03">Operador 03</option>
-              <option value="Administrador Global SC">
-                Administrador Global SC
-              </option>
-            </select>
-
-            <div className={styles.modalActions}>
-              <button type="button" onClick={() => setModal(null)}>
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                className={styles.modalPrimary}
-                onClick={encaminharPedido}
-              >
-                Encaminhar Pedido
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-
       {modal === "ANEXO" && anexoSelecionado && (
         <div className={styles.modalOverlay}>
-          <section className={styles.modal}>
+          <section className={`${styles.modal} ${styles.fileModal}`}>
             <button
               type="button"
               className={styles.closeButton}
@@ -833,24 +706,30 @@ export default function DetalhePedidoPage() {
             <h2>{anexoSelecionado.nome}</h2>
 
             <p>
-              Tipo: <b>{anexoSelecionado.tipo}</b>
-            </p>
-
-            <p>
-              Tamanho: <b>{getAttachmentSize(anexoSelecionado)}</b>
+              Tipo: <b>{anexoSelecionado.tipo}</b> · Tamanho:{" "}
+              <b>{getAttachmentSize(anexoSelecionado)}</b>
             </p>
 
             <div className={styles.filePreview}>
-              Visualização do arquivo disponível quando os anexos reais forem
-              conectados ao armazenamento do sistema.
+              {anexoSelecionado.tipo === "PDF" ? (
+                <iframe
+                  src={getAttachmentUrl(anexoSelecionado)}
+                  title={`Visualização de ${anexoSelecionado.nome}`}
+                />
+              ) : (
+                <img
+                  src={getAttachmentUrl(anexoSelecionado)}
+                  alt={anexoSelecionado.nome}
+                />
+              )}
             </div>
 
             <div className={styles.modalActions}>
               <button
                 type="button"
-                onClick={() => baixarAnexo(anexoSelecionado)}
+                onClick={() => void baixarAnexo(anexoSelecionado)}
               >
-                Baixar Informações
+                Baixar arquivo
               </button>
 
               <button
