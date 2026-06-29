@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 
 const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 
-const ALLOWED_FILE_TYPES = new Map([
-  ["application/pdf", "PDF"],
-  ["image/png", "PNG"],
-  ["image/jpeg", "JPG"],
-] as const);
+const ALLOWED_FILE_TYPES: Record<string, "PDF" | "PNG" | "JPG"> = {
+  "application/pdf": "PDF",
+  "image/png": "PNG",
+  "image/jpeg": "JPG",
+};
 
 function getText(formData: FormData, key: string) {
   const value = formData.get(key);
