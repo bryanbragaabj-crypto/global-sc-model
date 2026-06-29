@@ -26,6 +26,12 @@ type Attachment = {
   type: "PDF" | "PNG" | "JPG";
 };
 
+type PedidoSubmissionResponse = {
+  ok?: boolean;
+  message?: string;
+  numero?: string;
+};
+
 type CnpjResponse = {
   cnpj?: string;
   razao_social?: string;
@@ -182,88 +188,6 @@ function getAttachmentType(file: File): Attachment["type"] | null {
 }
 
 
-const PEDIDOS_STORAGE_KEY = "global-sc-pedidos";
-const PEDIDOS_UPDATED_EVENT = "global-sc-pedidos-updated";
-
-function createOrderNumber() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const sequence = String(now.getTime()).slice(-6);
-
-  return `GS${year}-${sequence}`;
-}
-
-function formatOrderDate(date: Date) {
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
-}
-
-function saveOrderInAdminQueue(
-  formData: FormData,
-  attachments: Attachment[],
-  isAdminOrder: boolean,
-) {
-  const now = new Date();
-  const orderId = `pedido-${now.getTime()}-${Math.random()
-    .toString(36)
-    .slice(2, 8)}`;
-
-  const newOrder = {
-    id: orderId,
-    numero: createOrderNumber(),
-    cliente: formData.nomeFantasia || formData.nome,
-    email: formData.email,
-    telefone: formData.telefone,
-    cnpj: formData.cnpj,
-    nome: formData.nome,
-    nomeFantasia: formData.nomeFantasia,
-    inscricaoEstadual: formData.inscricaoEstadual,
-    endereco: formData.endereco,
-    numeroEndereco: formData.numero,
-    bairro: formData.bairro,
-    cep: formData.cep,
-    cidade: formData.cidade,
-    representante: formData.representante,
-    assunto: `Pedido - ${formData.nomeFantasia || formData.nome}`,
-    mensagem: formData.mensagem.trim() || "Pedido enviado com anexos.",
-    importadora: "A definir",
-    origem: isAdminOrder ? "MANUAL" : "SITE",
-    status: "RECEBIDO",
-    responsavel: isAdminOrder ? "Admin Global SC" : "",
-    dataFormatada: formatOrderDate(now),
-    criadoEm: now.toISOString(),
-    anexos: attachments.map((attachment) => ({
-      id: attachment.id,
-      nome: attachment.file.name,
-      tipo: attachment.type,
-    })),
-  };
-
-  try {
-    const currentData = window.localStorage.getItem(PEDIDOS_STORAGE_KEY);
-    const currentOrders = currentData ? JSON.parse(currentData) : [];
-    const orders = Array.isArray(currentOrders) ? currentOrders : [];
-
-    window.localStorage.setItem(
-      PEDIDOS_STORAGE_KEY,
-      JSON.stringify([newOrder, ...orders]),
-    );
-
-    window.dispatchEvent(new Event(PEDIDOS_UPDATED_EVENT));
-  } catch {
-    throw new Error(
-      "Não foi possível registrar o pedido neste navegador. Tente novamente.",
-    );
-  }
-
-  return newOrder;
-}
-
 export default function PedidoPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -279,6 +203,7 @@ export default function PedidoPage() {
   const [isSearchingCnpj, setIsSearchingCnpj] = useState(false);
   const [lastFetchedCnpj, setLastFetchedCnpj] = useState("");
   const [isAdminOrder, setIsAdminOrder] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -438,8 +363,12 @@ export default function PedidoPage() {
     }
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
 
     if (!formData.mensagem.trim() && attachments.length === 0) {
       setFeedback(
@@ -449,14 +378,43 @@ export default function PedidoPage() {
     }
 
     try {
-      saveOrderInAdminQueue(formData, attachments, isAdminOrder);
+      setIsSubmitting(true);
       setFeedback("");
+
+      const dadosEnvio = new FormData();
+
+      Object.entries(formData).forEach(([campo, valor]) => {
+        dadosEnvio.append(campo, valor);
+      });
+
+      dadosEnvio.append("origem", isAdminOrder ? "MANUAL" : "SITE");
+
+      attachments.forEach((attachment) => {
+        dadosEnvio.append("anexos", attachment.file, attachment.file.name);
+      });
+
+      const response = await fetch("/api/pedidos", {
+        method: "POST",
+        body: dadosEnvio,
+      });
+
+      const resposta = (await response
+        .json()
+        .catch(() => ({}))) as PedidoSubmissionResponse;
+
+      if (!response.ok || resposta.ok !== true) {
+        throw new Error(
+          resposta.message ||
+            "Não foi possível registrar o pedido. Tente novamente.",
+        );
+      }
 
       if (isAdminOrder) {
         window.location.href = "/admin/pedidos?enviado=1";
         return;
       }
 
+      clearForm();
       setShowSuccess(true);
     } catch (error) {
       setFeedback(
@@ -464,6 +422,8 @@ export default function PedidoPage() {
           ? error.message
           : "Não foi possível enviar o pedido. Tente novamente.",
       );
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -891,9 +851,13 @@ export default function PedidoPage() {
                   Limpar
                 </button>
 
-                <button className={styles.submitButton} type="submit">
+                <button
+                  className={styles.submitButton}
+                  type="submit"
+                  disabled={isSubmitting}
+                >
                   <SendIcon />
-                  Enviar Pedido
+                  {isSubmitting ? "Enviando..." : "Enviar Pedido"}
                 </button>
               </div>
             </div>
