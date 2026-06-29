@@ -209,12 +209,8 @@ function getPrimaryAction(status: PedidoStatus) {
   };
 }
 
-function normalizeWhatsapp(phone?: string) {
-  return (phone || "").replace(/\D/g, "");
-}
-
-function getAnexoTamanho(anexo: PedidoAnexo) {
-  return (anexo as PedidoAnexo & { tamanho?: string }).tamanho || "—";
+function normalizeWhatsapp(phone: string) {
+  return phone.replace(/\D/g, "");
 }
 
 export default function DetalhePedidoPage() {
@@ -265,7 +261,12 @@ export default function DetalhePedidoPage() {
   const primaryAction = getPrimaryAction(pedido.status);
 
   function atualizarStatus() {
-    if (!pedido || pedido.status === "FINALIZADO") {
+    if (!pedido) {
+      return;
+    }
+
+    if (pedido.status === "FINALIZADO") {
+      setFeedback("Este pedido já está finalizado.");
       return;
     }
 
@@ -292,6 +293,10 @@ export default function DetalhePedidoPage() {
   }
 
   function encaminharPedido() {
+    if (!pedido) {
+      return;
+    }
+
     if (!destinatario) {
       setFeedback("Selecione um responsável para encaminhar o pedido.");
       return;
@@ -310,6 +315,10 @@ export default function DetalhePedidoPage() {
   }
 
   function abrirWhatsapp() {
+    if (!pedido) {
+      return;
+    }
+
     const telefone = normalizeWhatsapp(pedido.telefone);
 
     const texto = encodeURIComponent(
@@ -325,6 +334,10 @@ export default function DetalhePedidoPage() {
   }
 
   function abrirEmail() {
+    if (!pedido) {
+      return;
+    }
+
     const assunto = encodeURIComponent(`Retorno sobre o pedido ${pedido.numero}`);
     const corpo = encodeURIComponent(
       mensagemResposta ||
@@ -340,7 +353,7 @@ export default function DetalhePedidoPage() {
   }
 
   function baixarAnexo(anexo: PedidoAnexo) {
-    const conteudo = `Arquivo demonstrativo: ${anexo.nome}\nTipo: ${anexo.tipo}\nTamanho: ${getAnexoTamanho(anexo)}`;
+    const conteudo = `Arquivo demonstrativo: ${anexo.nome}\nTipo: ${anexo.tipo}\nTamanho: ${anexo.tamanho}`;
 
     const blob = new Blob([conteudo], {
       type: "text/plain;charset=utf-8",
@@ -572,7 +585,7 @@ export default function DetalhePedidoPage() {
 
                       <strong>{anexo.nome}</strong>
                       <small>
-                        {anexo.tipo} · {getAnexoTamanho(anexo)}
+                        {anexo.tipo} · {anexo.tamanho}
                       </small>
 
                       <div>
