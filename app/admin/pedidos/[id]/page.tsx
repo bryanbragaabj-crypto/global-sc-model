@@ -319,7 +319,7 @@ export default function DetalhePedidoPage() {
       return;
     }
 
-    const telefone = normalizeWhatsapp(pedido.telefone);
+   const telefone = normalizeWhatsapp(pedido.telefone || "");
 
     const texto = encodeURIComponent(
       mensagemResposta ||
