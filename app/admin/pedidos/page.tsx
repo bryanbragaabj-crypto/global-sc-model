@@ -433,7 +433,7 @@ export default function PedidosPage() {
                 </div>
 
                 <Link
-                  href="/pedido?retorno=/admin/pedidos"
+                 href="/pedido?origem=admin&retorno=/admin/pedidos"
                   className={styles.addButton}
                 >
                   <PlusIcon />

@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "../../lib/supabase-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const PEDIDOS_BUCKET = "pedido-anexos";
 const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 
 const ALLOWED_FILE_TYPES: Record<string, "PDF" | "PNG" | "JPG"> = {
@@ -38,6 +39,51 @@ function createOrderNumber() {
   const sequence = String(now.getTime()).slice(-8);
 
   return `GS${year}-${sequence}`;
+}
+
+/*
+  Garante que o local privado para anexos exista antes de enviar arquivo.
+  Esta ação ocorre somente no servidor, usando a chave secreta do Supabase.
+*/
+async function garantirBucketDeAnexos() {
+  const supabase = getSupabaseAdmin();
+
+  const { data: bucket, error: bucketError } = await supabase.storage.getBucket(
+    PEDIDOS_BUCKET,
+  );
+
+  if (bucket && !bucketError) {
+    return;
+  }
+
+  const { error: createBucketError } = await supabase.storage.createBucket(
+    PEDIDOS_BUCKET,
+    {
+      public: false,
+      fileSizeLimit: MAX_ATTACHMENT_SIZE,
+      allowedMimeTypes: [
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+      ],
+    },
+  );
+
+  /*
+    Se duas pessoas enviarem ao mesmo tempo, uma pode criar primeiro.
+    Nesse caso, consulta novamente para confirmar que ele existe.
+  */
+  if (createBucketError) {
+    const { data: bucketAfterCreate } = await supabase.storage.getBucket(
+      PEDIDOS_BUCKET,
+    );
+
+    if (!bucketAfterCreate) {
+      throw new Error(
+        `Não foi possível preparar o armazenamento de anexos: ${createBucketError.message}`,
+      );
+    }
+  }
 }
 
 export async function POST(request: Request) {
@@ -117,7 +163,6 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies();
-
     const isAdmin =
       cookieStore.get("global-sc-admin-session")?.value === "autorizado";
 
@@ -135,6 +180,10 @@ export async function POST(request: Request) {
       tamanho: string;
       caminho: string;
     }> = [];
+
+    if (attachmentFiles.length > 0) {
+      await garantirBucketDeAnexos();
+    }
 
     for (const file of attachmentFiles) {
       const tipo = ALLOWED_FILE_TYPES[file.type];
@@ -160,7 +209,6 @@ export async function POST(request: Request) {
       }
 
       const attachmentId = crypto.randomUUID();
-
       const caminho = `${pedidoId}/${attachmentId}-${safeFileName(
         file.name,
       )}`;
@@ -168,14 +216,16 @@ export async function POST(request: Request) {
       const fileData = new Uint8Array(await file.arrayBuffer());
 
       const { error: uploadError } = await supabase.storage
-        .from("pedido-anexos")
+        .from(PEDIDOS_BUCKET)
         .upload(caminho, fileData, {
           contentType: file.type,
           upsert: false,
         });
 
       if (uploadError) {
-        throw new Error("Não foi possível salvar um dos anexos do pedido.");
+        throw new Error(
+          `Não foi possível salvar o anexo "${file.name}": ${uploadError.message}`,
+        );
       }
 
       uploadedPaths.push(caminho);
@@ -215,7 +265,9 @@ export async function POST(request: Request) {
     });
 
     if (insertError) {
-      throw new Error("Não foi possível registrar o pedido no banco de dados.");
+      throw new Error(
+        `Não foi possível registrar o pedido no banco: ${insertError.message}`,
+      );
     }
 
     return NextResponse.json(
@@ -229,10 +281,9 @@ export async function POST(request: Request) {
     if (uploadedPaths.length > 0) {
       try {
         const supabase = getSupabaseAdmin();
-
-        await supabase.storage.from("pedido-anexos").remove(uploadedPaths);
+        await supabase.storage.from(PEDIDOS_BUCKET).remove(uploadedPaths);
       } catch {
-        // Mantém o erro principal.
+        // Mantém a mensagem do problema principal.
       }
     }
 
