@@ -209,8 +209,13 @@ function getPrimaryAction(status: PedidoStatus) {
   };
 }
 
-function normalizeWhatsapp(phone: string) {
-  return phone.replace(/\D/g, "");
+function normalizeWhatsapp(phone?: string) {
+  return (phone || "").replace(/\D/g, "");
+}
+
+function getAttachmentSize(anexo: PedidoAnexo) {
+  const anexoComTamanho = anexo as PedidoAnexo & { tamanho?: string };
+  return anexoComTamanho.tamanho || "Não informado";
 }
 
 export default function DetalhePedidoPage() {
@@ -319,7 +324,12 @@ export default function DetalhePedidoPage() {
       return;
     }
 
-   const telefone = normalizeWhatsapp(pedido.telefone || "");
+    const telefone = normalizeWhatsapp(pedido.telefone);
+
+    if (!telefone) {
+      setFeedback("Este pedido não possui telefone cadastrado.");
+      return;
+    }
 
     const texto = encodeURIComponent(
       mensagemResposta ||
@@ -353,7 +363,7 @@ export default function DetalhePedidoPage() {
   }
 
   function baixarAnexo(anexo: PedidoAnexo) {
-    const conteudo = `Arquivo demonstrativo: ${anexo.nome}\nTipo: ${anexo.tipo}\nTamanho: ${anexo.tamanho}`;
+    const conteudo = `Arquivo demonstrativo: ${anexo.nome}\nTipo: ${anexo.tipo}\nTamanho: ${getAttachmentSize(anexo)}`;
 
     const blob = new Blob([conteudo], {
       type: "text/plain;charset=utf-8",
@@ -585,7 +595,7 @@ export default function DetalhePedidoPage() {
 
                       <strong>{anexo.nome}</strong>
                       <small>
-                        {anexo.tipo} · {anexo.tamanho}
+                        {anexo.tipo} · {getAttachmentSize(anexo)}
                       </small>
 
                       <div>
@@ -827,7 +837,7 @@ export default function DetalhePedidoPage() {
             </p>
 
             <p>
-              Tamanho: <b>{anexoSelecionado.tamanho}</b>
+              Tamanho: <b>{getAttachmentSize(anexoSelecionado)}</b>
             </p>
 
             <div className={styles.filePreview}>
