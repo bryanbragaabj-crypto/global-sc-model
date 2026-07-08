@@ -15,54 +15,9 @@ type Supplier = {
 };
 
 const suppliers: Supplier[] = [
+  
   {
     id: 1,
-    name: "Inovare Representações",
-    slug: "inovare",
-    image: "/inovare.png",
-    catalogPath: "/catalogos/inovare",
-    b2bUrl: "https://inovarerepresentacoes.pedidook.com.br",
-    categories: [
-      "Moletons",
-      "calça",
-      "blusa",
-      "conjunto",
-      "jaqueta",
-      "casaco",
-      "cardigan",
-      "Camiseta",
-      "camisas",
-      "Pijama",
-      "Vestido",
-      "macaquinho",
-      "macacão",
-      "Saia",
-      "shorts",
-      "short saia",
-      "Pantufa",
-      "Meia",
-      "polainas",
-      "Lingerie",
-      "Meia-calça",
-      "Mochilas bolsas",
-      "Carteiras",
-      "cintos",
-      "brinquedos",
-      "touca",
-      "gorro"
-    ],
-    keywords: [
-      "inovare",
-      "representações",
-      "importados",
-      "inverno",
-      "verão",
-      "roupas",
-      "confecção",
-    ],
-  },
-  {
-    id: 2,
     name: "Importadora Kontudo",
     slug: "kontudo",
     image: "/kontudo.png",
@@ -106,7 +61,7 @@ const suppliers: Supplier[] = [
     ],
   },
   {
-    id: 3,
+    id: 2,
     name: "Kontudo Surf",
     slug: "kontudo-surf",
     image: "/kontudo-surf.png",
@@ -128,7 +83,7 @@ const suppliers: Supplier[] = [
     ],
   },
   {
-    id: 4,
+    id: 3,
     name: "Importadora do Cunha",
     slug: "importadora-do-cunha",
     image: "/cunha.png",
@@ -169,7 +124,7 @@ const suppliers: Supplier[] = [
     ],
   },
   {
-    id: 5,
+    id: 4,
     name: "SC Fashion",
     slug: "sc-fashion",
     image: "/sc-fashion.png",
