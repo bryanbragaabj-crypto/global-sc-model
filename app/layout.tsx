@@ -10,7 +10,7 @@ import "./globals.css";
 */
 const URL_PRINCIPAL = "https://globalscaltoatacado.com";
 const IMAGEM_COMPARTILHAMENTO =
-  "https://globalscaltoatacado.com/miniatura-whatsapp-oficial.jpg";
+  "https://globalscaltoatacado.com/miniatura-whatsapp-oficial.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_PRINCIPAL),
