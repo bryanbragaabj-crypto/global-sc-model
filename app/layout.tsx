@@ -2,20 +2,16 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
-/*
-  Miniatura única, estática e leve para WhatsApp, Facebook e outros apps.
-  Ela funciona para os dois domínios porque ambos apontam ao mesmo projeto:
-  - https://globalscaltoatacado.com
-  - https://site.globalscaltoatacado.com
-*/
 const URL_PRINCIPAL = "https://globalscaltoatacado.com";
+
 const IMAGEM_COMPARTILHAMENTO =
-  "https://globalscaltoatacado.com/miniatura-whatsapp-oficial.png";
+  "https://globalscaltoatacado.com/miniatura-whatsapp-oficial-v2.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_PRINCIPAL),
 
   title: "Global SC Alto Atacado | As Melhores Importadoras",
+
   description:
     "Encontre fornecedores confiáveis, visualize catálogos e envie seu pedido de forma rápida e prática.",
 
@@ -28,16 +24,18 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: URL_PRINCIPAL,
     siteName: "Global SC Alto Atacado",
+
     title: "Global SC Alto Atacado | As Melhores Importadoras",
+
     description:
       "Encontre fornecedores confiáveis, visualize catálogos e envie seu pedido de forma rápida e prática.",
+
     images: [
       {
         url: IMAGEM_COMPARTILHAMENTO,
-        secureUrl: IMAGEM_COMPARTILHAMENTO,
-        type: "image/png",
         width: 1200,
         height: 630,
+        type: "image/png",
         alt: "Global SC Alto Atacado - As Melhores Importadoras",
       },
     ],
@@ -45,10 +43,18 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
+
     title: "Global SC Alto Atacado | As Melhores Importadoras",
+
     description:
       "Encontre fornecedores confiáveis, visualize catálogos e envie seu pedido de forma rápida e prática.",
+
     images: [IMAGEM_COMPARTILHAMENTO],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
