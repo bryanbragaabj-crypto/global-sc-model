@@ -51,6 +51,27 @@ const catalogos: Catalogo[] = [
       "Confira os produtos disponíveis no catálogo MNO da Kontudo Surf.",
     arquivo: "MNO.pdf",
   },
+   {
+    id: 7,
+    titulo: "CAT. INV. MASC. 26",
+    descricao:
+      "Confira os produtos disponíveis no catálogo Infantil Masculino da Kontudo Surf.",
+    arquivo: "CAT. INV. MASC. 26.pdf",
+  },
+  {
+    id: 8,
+    titulo: "CAT. INV. MODAL FEM. 26",
+    descricao:
+      "Confira os produtos disponíveis no catálogo Infantil Modal Feminino da Kontudo Surf.",
+    arquivo: "CAT. INV. MODAL FEM. 26.pdf",
+  },
+   {
+    id: 9,
+    titulo: "CAT. INV. INF. JUV FEM. 26",
+    descricao:
+      "Confira os produtos disponíveis no catálogo Infantojuvenil Feminino da Kontudo Surf.",
+    arquivo: "CAT. INV. INF. JUV FEM. 26.pdf",
+  },
 ];
 
 function ArrowLeftIcon() {
