@@ -35,7 +35,7 @@ export const metadata: Metadata = {
       {
         url: IMAGEM_COMPARTILHAMENTO,
         secureUrl: IMAGEM_COMPARTILHAMENTO,
-        type: "image/jpeg",
+        type: "image/png",
         width: 1200,
         height: 630,
         alt: "Global SC Alto Atacado - As Melhores Importadoras",
