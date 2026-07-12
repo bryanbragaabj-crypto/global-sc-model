@@ -84,7 +84,7 @@ function ExternalIcon() {
   );
 }
 
-export default function KontudoSurfCatalogosPage() {
+export default function importadoradoCunhaCatalogosPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -108,7 +108,7 @@ export default function KontudoSurfCatalogosPage() {
           <div className={styles.bannerWrapper}>
             <Image
               src="/banner-principal.png"
-              alt="Kontudo Surf"
+              alt="Importadora do Cunha"
               width={1269}
               height={162}
               priority
@@ -125,7 +125,7 @@ export default function KontudoSurfCatalogosPage() {
               CATÁLOGOS EM PDF
             </span>
 
-            <h1>CATÁLOGOS KONTUDO SURF</h1>
+            <h1>CATÁLOGOS IMPORTADORA DO CUNHA</h1>
 
             <p>
               Escolha uma das opções abaixo e clique para visualizar o catálogo
@@ -139,7 +139,7 @@ export default function KontudoSurfCatalogosPage() {
         <div className={styles.container}>
           <div className={styles.catalogGrid}>
             {catalogos.map((catalogo) => {
-              const pdfUrl = `/catalogos/kontudo-surf/${encodeURIComponent(
+              const pdfUrl = `/catalogos/importadora-do-cunha/${encodeURIComponent(
                 catalogo.arquivo
               )}`;
 
@@ -190,7 +190,7 @@ export default function KontudoSurfCatalogosPage() {
             </div>
 
             <a
-              href="https://wa.me/5548920703577?text=Olá!%20Gostaria%20de%20mais%20informações%20sobre%20os%20catálogos%20da%20Kontudo%20Surf."
+              href="https://wa.me/5548920703577?text=Olá!%20Gostaria%20de%20mais%20informações%20sobre%20os%20catálogos%20da%20importadoradocunha%20Surf."
               target="_blank"
               rel="noopener noreferrer"
             >
