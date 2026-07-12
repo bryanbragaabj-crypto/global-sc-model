@@ -183,7 +183,7 @@ export default function kontudoCatalogosPage() {
             </div>
 
             <a
-              href="https://wa.me/5548920703577?text=Olá!%20Gostaria%20de%20mais%20informações%20sobre%20os%20catálogos%20da%20kunha%20Surf."
+              href="https://wa.me/5548920703577?text=Olá!%20Gostaria%20de%20mais%20informações%20sobre%20os%20catálogos%20da%20kontudo%20Blend."
               target="_blank"
               rel="noopener noreferrer"
             >

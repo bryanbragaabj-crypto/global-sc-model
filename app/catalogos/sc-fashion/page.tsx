@@ -11,45 +11,59 @@ type Catalogo = {
 const catalogos: Catalogo[] = [
   {
     id: 1,
-    titulo: "LYSTR-001-25 03-02",
+    titulo: "Catálogo Andrade",
     descricao:
       "Confira os modelos.",
-    arquivo: "LYSTR-001-25 03-02.pdf",
-  },
-  {
-    id: 2,
-    titulo: "LYSTR-002-25 03-02",
-    descricao:
-      "Confira os Modelos.",
-    arquivo: "LYSTR-002-25 03-02.pdf",
+    arquivo: "catalogo Andrade.pdf",
   },
   {
     id: 3,
-    titulo: "LYSTR-003-25 13-5",
+    titulo: "Catálogo Basics",
     descricao:
-      "Confira Modelos.",
-    arquivo: "LYSTR-003-25 13-5.pdf",
+      "Confira os modelos.",
+    arquivo: "catalogo Basics.pdf",
   },
   {
     id: 4,
-    titulo: "LYSTR-004-25 13-5",
+    titulo: "Catálogo Estudio 3D 665",
     descricao:
-      "Confira Modelos.",
-    arquivo: "LYSTR-004-25 13-5.pdf",
+      "Confira os modelos.",
+    arquivo: "catalogo Estudio 3D 665.pdf",
   },
   {
     id: 5,
-    titulo: "LYSTR-005-2513-5",
+    titulo: "Catálogo Liwyn",
     descricao:
-      "Confira os Modelos.",
-    arquivo: "LYSTR-005-2513-5.pdf",
+      "Confira os modelos.",
+    arquivo: "catalogo Liwyn.pdf",
   },
   {
     id: 6,
-    titulo: "MSKZA-011-25",
+    titulo: "Catálogo Moda Center Fabiola e Roberto",
     descricao:
-      "Confira os Modelos.",
-    arquivo: "MSKZA-011-25.pdf",
+      "Confira os modelos.",
+    arquivo: "catalogo Moda Center Fabiola e Roberto.pdf",
+  },
+   {
+    id: 7,
+    titulo: "Catálogo Moda Center Raulino",
+    descricao:
+      "Confira os modelos.",
+    arquivo: "catalogo Moda Center Raulino.pdf",
+  },
+  {
+    id: 8,
+    titulo: "Catálogo Wendy",
+    descricao:
+      "Confira os modelos.",
+    arquivo: "catalogo Wendy.pdf",
+  },
+   {
+    id: 9,
+    titulo: "Catálogo WS Moda Praia",
+    descricao:
+      "Confira os modelos.",
+    arquivo: "catalogo WS Moda Praia.pdf",
   },
 ];
 
@@ -84,7 +98,7 @@ function ExternalIcon() {
   );
 }
 
-export default function importadoradoCunhaCatalogosPage() {
+export default function scfashionSurfCatalogosPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -108,7 +122,7 @@ export default function importadoradoCunhaCatalogosPage() {
           <div className={styles.bannerWrapper}>
             <Image
               src="/banner-principal.png"
-              alt="Importadora do Cunha"
+              alt="SC FASHION"
               width={1269}
               height={162}
               priority
@@ -125,7 +139,7 @@ export default function importadoradoCunhaCatalogosPage() {
               CATÁLOGOS EM PDF
             </span>
 
-            <h1>CATÁLOGOS IMPORTADORA DO CUNHA</h1>
+            <h1>CATÁLOGOS SC FASHION</h1>
 
             <p>
               Escolha uma das opções abaixo e clique para visualizar o catálogo
@@ -139,7 +153,7 @@ export default function importadoradoCunhaCatalogosPage() {
         <div className={styles.container}>
           <div className={styles.catalogGrid}>
             {catalogos.map((catalogo) => {
-              const pdfUrl = `/catalogos/importadora-do-cunha/${encodeURIComponent(
+              const pdfUrl = `/catalogos/sc-fashion/${encodeURIComponent(
                 catalogo.arquivo
               )}`;
 
@@ -190,7 +204,7 @@ export default function importadoradoCunhaCatalogosPage() {
             </div>
 
             <a
-              href="https://wa.me/5548920703577?text=Olá!%20Gostaria%20de%20mais%20informações%20sobre%20os%20catálogos%20da%20importadoradocunha%20."
+              href="https://wa.me/5548920703577?text=Olá!%20Gostaria%20de%20mais%20informações%20sobre%20os%20catálogos%20da%20SCFASHION%20."
               target="_blank"
               rel="noopener noreferrer"
             >
