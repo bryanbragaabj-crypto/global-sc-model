@@ -4,16 +4,18 @@ import "./globals.css";
 
 const URL_PRINCIPAL = "https://globalscaltoatacado.com";
 
-const IMAGEM_COMPARTILHAMENTO =
-  "https://globalscaltoatacado.com/miniatura-whatsapp-oficial-v2.png";
+const TITULO =
+  "Global SC Alto Atacado | As Melhores Importadoras";
+
+const DESCRICAO =
+  "Encontre fornecedores confiáveis, visualize catálogos e envie seu pedido de forma rápida e prática.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_PRINCIPAL),
 
-  title: "Global SC Alto Atacado | As Melhores Importadoras",
+  title: TITULO,
 
-  description:
-    "Encontre fornecedores confiáveis, visualize catálogos e envie seu pedido de forma rápida e prática.",
+  description: DESCRICAO,
 
   alternates: {
     canonical: URL_PRINCIPAL,
@@ -24,32 +26,14 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: URL_PRINCIPAL,
     siteName: "Global SC Alto Atacado",
-
-    title: "Global SC Alto Atacado | As Melhores Importadoras",
-
-    description:
-      "Encontre fornecedores confiáveis, visualize catálogos e envie seu pedido de forma rápida e prática.",
-
-    images: [
-      {
-        url: IMAGEM_COMPARTILHAMENTO,
-        width: 1200,
-        height: 630,
-        type: "image/png",
-        alt: "Global SC Alto Atacado - As Melhores Importadoras",
-      },
-    ],
+    title: TITULO,
+    description: DESCRICAO,
   },
 
   twitter: {
     card: "summary_large_image",
-
-    title: "Global SC Alto Atacado | As Melhores Importadoras",
-
-    description:
-      "Encontre fornecedores confiáveis, visualize catálogos e envie seu pedido de forma rápida e prática.",
-
-    images: [IMAGEM_COMPARTILHAMENTO],
+    title: TITULO,
+    description: DESCRICAO,
   },
 
   robots: {
