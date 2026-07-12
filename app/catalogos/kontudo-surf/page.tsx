@@ -14,63 +14,42 @@ const catalogos: Catalogo[] = [
     titulo: "Catálogo Inverno Feminino 2026",
     descricao:
       "Confira os modelos femininos da coleção de inverno da Kontudo Surf.",
-    arquivo: "CAT. INV. FEM. 2026.pdf.pdf",
+    arquivo: "CAT. INV. FEM. 2026.pdf",
   },
   {
     id: 2,
-    titulo: "Catálogo Inverno Infantil e Juvenil Feminino",
-    descricao:
-      "Coleção de inverno infantil e juvenil feminina da Kontudo Surf.",
-    arquivo: "CAT. INV. INF. JUV FEM. 26.pdf (1).pdf",
-  },
-  {
-    id: 3,
     titulo: "Catálogo Inverno Infantil e Juvenil Masculino",
     descricao:
       "Coleção de inverno infantil e juvenil masculina da Kontudo Surf.",
-    arquivo: "CAT. INV. INF. JUV. MASC. 26.pdf.pdf",
+    arquivo: "CAT. INV. INF. JUV. MASC. 26.pdf",
   },
   {
-    id: 4,
-    titulo: "Catálogo Inverno Masculino 2026",
-    descricao:
-      "Confira os modelos masculinos da coleção de inverno da Kontudo Surf.",
-    arquivo: "CAT. INV. MASC. 26.pdf.pdf",
-  },
-  {
-    id: 5,
-    titulo: "Catálogo Moda Feminina 2026",
-    descricao:
-      "Novidades e modelos selecionados de moda feminina da Kontudo Surf.",
-    arquivo: "CAT. INV. MODAL FEM. 26.pdf.pdf",
-  },
-  {
-    id: 6,
+    id: 3,
     titulo: "Catálogo Feminino",
     descricao:
       "Confira produtos e opções selecionadas da linha feminina.",
-    arquivo: "FEM.pdf.pdf",
+    arquivo: "FEM.pdf",
   },
   {
-    id: 7,
+    id: 4,
     titulo: "Catálogo Masculino",
     descricao:
       "Confira produtos e opções selecionadas da linha masculina.",
-    arquivo: "MASC.pdf.pdf",
+    arquivo: "MASC.pdf",
   },
   {
-    id: 8,
+    id: 5,
     titulo: "Catálogo MNA",
     descricao:
       "Confira os produtos disponíveis no catálogo MNA da Kontudo Surf.",
-    arquivo: "MNA.pdf.pdf",
+    arquivo: "MNA.pdf",
   },
   {
-    id: 9,
+    id: 6,
     titulo: "Catálogo MNO",
     descricao:
       "Confira os produtos disponíveis no catálogo MNO da Kontudo Surf.",
-    arquivo: "MNO.pdf.pdf",
+    arquivo: "MNO.pdf",
   },
 ];
 
@@ -128,7 +107,7 @@ export default function KontudoSurfCatalogosPage() {
         <div className={styles.container}>
           <div className={styles.bannerWrapper}>
             <Image
-              src="/kontudo-surf.png"
+              src="/banner-principal.png"
               alt="Kontudo Surf"
               width={1269}
               height={162}
@@ -161,7 +140,7 @@ export default function KontudoSurfCatalogosPage() {
           <div className={styles.catalogGrid}>
             {catalogos.map((catalogo) => {
               const pdfUrl = `/catalogos/kontudo-surf/${encodeURIComponent(
-                catalogo.arquivo,
+                catalogo.arquivo
               )}`;
 
               return (
