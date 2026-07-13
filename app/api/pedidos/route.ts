@@ -1,67 +1,66 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
-  encodeStoragePath,
   getErrorMessage,
   getSupabaseHeaders,
   getSupabaseServerConfig,
-} from "../../../lib/supabase-admin";
+} from "../../lib/supabase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const PEDIDOS_BUCKET = "pedido-anexos";
-const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 const MAX_ATTACHMENTS = 10;
 
-type AttachmentType = "PDF" | "PNG" | "JPG";
-
-type ArquivoSolicitado = {
+type AnexoRecebido = {
   id?: unknown;
   nome?: unknown;
   tipo?: unknown;
   tamanho?: unknown;
+  caminho?: unknown;
 };
 
-type SignedUploadResponse = {
-  url?: string;
+type PedidoRecebido = {
+  cnpj?: unknown;
+  nome?: unknown;
+  nomeFantasia?: unknown;
+  inscricaoEstadual?: unknown;
+  endereco?: unknown;
+  numero?: unknown;
+  bairro?: unknown;
+  cep?: unknown;
+  cidade?: unknown;
+  telefone?: unknown;
+  email?: unknown;
+  representante?: unknown;
+  mensagem?: unknown;
+  origem?: unknown;
+  anexos?: unknown;
 };
 
-type ErrorWithCause = Error & {
-  cause?: {
-    code?: string;
-    syscall?: string;
-    hostname?: string;
-    address?: string;
-    port?: number;
-    message?: string;
-  };
-};
+type SupabaseConfig = ReturnType<
+  typeof getSupabaseServerConfig
+>;
 
-function isAllowedAttachmentType(
-  value: string,
-): value is AttachmentType {
-  return (
-    value === "PDF" ||
-    value === "PNG" ||
-    value === "JPG"
-  );
+function getText(value: unknown) {
+  return typeof value === "string"
+    ? value.trim()
+    : "";
 }
 
-function safeFileName(name: string) {
-  const normalized = name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-  const safeName = normalized
-    .replace(/[^a-zA-Z0-9._-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 120);
-
-  return safeName || `arquivo-${Date.now()}`;
+function onlyNumbers(value: string) {
+  return value.replace(/\D/g, "");
 }
 
-function isSafeId(value: string) {
+function createOrderNumber() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const sequence = String(now.getTime()).slice(-8);
+
+  return `GS${year}-${sequence}`;
+}
+
+function isSafeAttachmentId(value: string) {
   return /^[a-zA-Z0-9._-]{8,120}$/.test(value);
 }
 
@@ -73,297 +72,63 @@ function isSafeStoragePath(value: string) {
   );
 }
 
-function getFetchErrorMessage(error: unknown) {
-  if (!(error instanceof Error)) {
-    return "Erro desconhecido ao conectar com o Supabase.";
+function readAttachments(value: unknown) {
+  const entrada = Array.isArray(value)
+    ? value
+    : [];
+
+  if (entrada.length > MAX_ATTACHMENTS) {
+    throw new Error(
+      `Envie no máximo ${MAX_ATTACHMENTS} anexos por pedido.`,
+    );
   }
 
-  const errorWithCause = error as ErrorWithCause;
-  const cause = errorWithCause.cause;
+  return entrada.map((item, index) => {
+    const anexo = item as AnexoRecebido;
 
-  if (!cause) {
-    return error.message;
-  }
+    const id = getText(anexo.id);
+    const nome = getText(anexo.nome);
+    const tipo = getText(anexo.tipo);
+    const tamanho = getText(anexo.tamanho);
+    const caminho = getText(anexo.caminho);
 
-  const details = [
-    cause.code
-      ? `Código: ${cause.code}`
-      : "",
-    cause.syscall
-      ? `Operação: ${cause.syscall}`
-      : "",
-    cause.hostname
-      ? `Servidor: ${cause.hostname}`
-      : "",
-    cause.address
-      ? `Endereço: ${cause.address}`
-      : "",
-    cause.port
-      ? `Porta: ${cause.port}`
-      : "",
-    cause.message
-      ? `Causa: ${cause.message}`
-      : "",
-  ].filter(Boolean);
-
-  if (details.length === 0) {
-    return error.message;
-  }
-
-  return `${error.message}. ${details.join(" | ")}`;
-}
-
-export async function POST(request: Request) {
-  try {
-    const body = (await request.json()) as {
-      arquivos?: ArquivoSolicitado[];
-    };
-
-    const arquivos = Array.isArray(body.arquivos)
-      ? body.arquivos
-      : [];
-
-    if (arquivos.length === 0) {
-      return NextResponse.json({
-        ok: true,
-        anexos: [],
-      });
-    }
-
-    if (arquivos.length > MAX_ATTACHMENTS) {
-      return NextResponse.json(
-        {
-          ok: false,
-          message:
-            `Envie no máximo ${MAX_ATTACHMENTS} anexos por pedido.`,
-        },
-        {
-          status: 400,
-        },
+    if (
+      !isSafeAttachmentId(id) ||
+      !nome ||
+      (
+        tipo !== "PDF" &&
+        tipo !== "PNG" &&
+        tipo !== "JPG"
+      ) ||
+      !isSafeStoragePath(caminho)
+    ) {
+      throw new Error(
+        `Anexo ${index + 1} inválido.`,
       );
     }
 
-    const config = getSupabaseServerConfig();
-    const loteId = crypto.randomUUID();
-
-    const anexos: Array<{
-      id: string;
-      caminho: string;
-      signedUrl: string;
-    }> = [];
-
-    for (const arquivo of arquivos) {
-      const id =
-        typeof arquivo.id === "string"
-          ? arquivo.id.trim()
-          : "";
-
-      const nome =
-        typeof arquivo.nome === "string"
-          ? arquivo.nome.trim()
-          : "";
-
-      const tipo =
-        typeof arquivo.tipo === "string"
-          ? arquivo.tipo.trim()
-          : "";
-
-      const tamanho =
-        typeof arquivo.tamanho === "number"
-          ? arquivo.tamanho
-          : Number.NaN;
-
-      if (
-        !isSafeId(id) ||
-        !nome ||
-        !isAllowedAttachmentType(tipo)
-      ) {
-        return NextResponse.json(
-          {
-            ok: false,
-            message:
-              "Um dos anexos é inválido. Remova o arquivo e selecione novamente.",
-          },
-          {
-            status: 400,
-          },
-        );
-      }
-
-      if (
-        !Number.isFinite(tamanho) ||
-        tamanho <= 0
-      ) {
-        return NextResponse.json(
-          {
-            ok: false,
-            message:
-              `O arquivo "${nome}" está vazio ou não pôde ser lido.`,
-          },
-          {
-            status: 400,
-          },
-        );
-      }
-
-      if (tamanho > MAX_ATTACHMENT_SIZE) {
-        return NextResponse.json(
-          {
-            ok: false,
-            message:
-              `O arquivo "${nome}" ultrapassa o limite de 20 MB.`,
-          },
-          {
-            status: 400,
-          },
-        );
-      }
-
-      const nomeSeguro = safeFileName(nome);
-
-      const caminho =
-        `pedidos/${loteId}/${id}-${nomeSeguro}`;
-
-      const endpoint =
-        `${config.url}/storage/v1/object/upload/sign/` +
-        `${PEDIDOS_BUCKET}/${encodeStoragePath(caminho)}`;
-
-      let response: Response;
-
-      try {
-        response = await fetch(endpoint, {
-          method: "POST",
-          headers: getSupabaseHeaders(config, {
-            "Content-Type": "application/json",
-          }),
-          body: JSON.stringify({
-            upsert: false,
-          }),
-          cache: "no-store",
-        });
-      } catch (error) {
-        const mensagemConexao =
-          getFetchErrorMessage(error);
-
-        console.error(
-          "Falha de conexão ao preparar o anexo:",
-          {
-            endpoint,
-            bucket: PEDIDOS_BUCKET,
-            caminho,
-            erro: mensagemConexao,
-          },
-        );
-
-        throw new Error(
-          `Não foi possível conectar ao Supabase para preparar "${nome}". ${mensagemConexao}`,
-        );
-      }
-
-      if (!response.ok) {
-        const mensagemSupabase =
-          await getErrorMessage(response);
-
-        console.error(
-          "Erro do Supabase ao preparar anexo:",
-          {
-            endpoint,
-            bucket: PEDIDOS_BUCKET,
-            caminho,
-            status: response.status,
-            mensagemSupabase,
-          },
-        );
-
-        throw new Error(
-          `Não foi possível preparar o anexo "${nome}". ${mensagemSupabase}`,
-        );
-      }
-
-      const data =
-        (await response.json()) as SignedUploadResponse;
-
-      if (!data.url) {
-        console.error(
-          "Supabase não retornou URL assinada:",
-          {
-            bucket: PEDIDOS_BUCKET,
-            caminho,
-            resposta: data,
-          },
-        );
-
-        throw new Error(
-          `O Supabase não retornou um link de envio para "${nome}".`,
-        );
-      }
-
-      const signedUrl = data.url.startsWith("http")
-        ? data.url
-        : `${config.url}/storage/v1${data.url}`;
-
-      anexos.push({
-        id,
-        caminho,
-        signedUrl,
-      });
-    }
-
-    return NextResponse.json({
-      ok: true,
-      anexos,
-    });
-  } catch (error) {
-    const message = getFetchErrorMessage(error);
-
-    console.error(
-      "Erro ao preparar anexos do pedido:",
-      error,
-    );
-
-    return NextResponse.json(
-      {
-        ok: false,
-        message,
-      },
-      {
-        status: 500,
-      },
-    );
-  }
+    return {
+      id,
+      nome,
+      tipo,
+      tamanho: tamanho || "Não informado",
+      caminho,
+    };
+  });
 }
 
-export async function DELETE(request: Request) {
+async function removeUploadedAttachments(
+  config: SupabaseConfig,
+  caminhos: string[],
+) {
+  if (caminhos.length === 0) {
+    return;
+  }
+
   try {
-    const body = (await request.json()) as {
-      caminhos?: unknown;
-    };
-
-    const caminhos = Array.isArray(body.caminhos)
-      ? body.caminhos
-          .filter(
-            (caminho): caminho is string =>
-              typeof caminho === "string" &&
-              isSafeStoragePath(caminho),
-          )
-          .slice(0, MAX_ATTACHMENTS)
-      : [];
-
-    if (caminhos.length === 0) {
-      return NextResponse.json({
-        ok: true,
-      });
-    }
-
-    const config = getSupabaseServerConfig();
-
-    const endpoint =
-      `${config.url}/storage/v1/object/${PEDIDOS_BUCKET}`;
-
-    let response: Response;
-
-    try {
-      response = await fetch(endpoint, {
+    const response = await fetch(
+      `${config.url}/storage/v1/object/${PEDIDOS_BUCKET}`,
+      {
         method: "DELETE",
         headers: getSupabaseHeaders(config, {
           "Content-Type": "application/json",
@@ -372,37 +137,241 @@ export async function DELETE(request: Request) {
           prefixes: caminhos,
         }),
         cache: "no-store",
-      });
-    } catch (error) {
-      throw new Error(
-        `Falha ao conectar com o Supabase para limpar os anexos. ${getFetchErrorMessage(
-          error,
-        )}`,
+      },
+    );
+
+    if (!response.ok) {
+      console.error(
+        "Não foi possível remover anexos após erro no pedido:",
+        await getErrorMessage(response),
       );
     }
+  } catch (error) {
+    console.error(
+      "Erro ao limpar anexos após falha no pedido:",
+      error,
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  let config: SupabaseConfig | null = null;
+  let caminhosEnviados: string[] = [];
+
+  try {
+    const body =
+      (await request.json()) as PedidoRecebido;
+
+    const cnpj = getText(body.cnpj);
+    const nome = getText(body.nome);
+    const nomeFantasia =
+      getText(body.nomeFantasia);
+    const endereco = getText(body.endereco);
+    const numeroEndereco =
+      getText(body.numero);
+    const bairro = getText(body.bairro);
+    const cep = getText(body.cep);
+    const cidade = getText(body.cidade);
+    const telefone = getText(body.telefone);
+    const email =
+      getText(body.email).toLowerCase();
+    const representante =
+      getText(body.representante);
+    const mensagem =
+      getText(body.mensagem);
+    const anexos =
+      readAttachments(body.anexos);
+
+    caminhosEnviados = anexos.map(
+      (anexo) => anexo.caminho,
+    );
+
+    if (
+      !cnpj ||
+      !nome ||
+      !nomeFantasia ||
+      !endereco ||
+      !numeroEndereco ||
+      !bairro ||
+      !cep ||
+      !cidade ||
+      !telefone ||
+      !email ||
+      !representante
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Preencha todos os campos obrigatórios do pedido.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (onlyNumbers(cnpj).length !== 14) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Informe um CNPJ válido com 14 números.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (
+      !email.includes("@") ||
+      email.startsWith("@") ||
+      email.endsWith("@")
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "Informe um e-mail válido.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (!mensagem && anexos.length === 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Escreva uma mensagem ou adicione ao menos um anexo.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const cookieStore = await cookies();
+
+    const isAdmin =
+      cookieStore.get(
+        "global-sc-admin-session",
+      )?.value === "autorizado";
+
+    const origemSolicitada =
+      getText(body.origem);
+
+    const origem =
+      isAdmin &&
+      origemSolicitada === "MANUAL"
+        ? "MANUAL"
+        : "SITE";
+
+    config = getSupabaseServerConfig();
+
+    const pedidoId = crypto.randomUUID();
+    const numeroPedido =
+      createOrderNumber();
+
+    const response = await fetch(
+      `${config.url}/rest/v1/pedidos`,
+      {
+        method: "POST",
+        headers: getSupabaseHeaders(config, {
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        }),
+        body: JSON.stringify({
+          id: pedidoId,
+          numero: numeroPedido,
+          cliente: nomeFantasia || nome,
+          email,
+          telefone,
+          cnpj,
+          nome,
+          nome_fantasia: nomeFantasia,
+          inscricao_estadual:
+            getText(body.inscricaoEstadual),
+          endereco,
+          numero_endereco: numeroEndereco,
+          bairro,
+          cep,
+          cidade,
+          representante,
+          assunto:
+            `Pedido - ${nomeFantasia || nome}`,
+          mensagem:
+            mensagem ||
+            "Pedido enviado com anexos.",
+          importadora: "A definir",
+          origem,
+          status: "RECEBIDO",
+          responsavel: isAdmin
+            ? "Admin Global SC"
+            : null,
+          anexos,
+        }),
+        cache: "no-store",
+      },
+    );
 
     if (!response.ok) {
       const mensagemSupabase =
         await getErrorMessage(response);
 
+      await removeUploadedAttachments(
+        config,
+        caminhosEnviados,
+      );
+
+      caminhosEnviados = [];
+
+      console.error(
+        "Erro ao registrar pedido no Supabase:",
+        {
+          status: response.status,
+          numeroPedido,
+          mensagemSupabase,
+        },
+      );
+
       throw new Error(mensagemSupabase);
     }
 
-    return NextResponse.json({
-      ok: true,
-    });
+    return NextResponse.json(
+      {
+        ok: true,
+        numero: numeroPedido,
+      },
+      {
+        status: 201,
+      },
+    );
   } catch (error) {
-    const message = getFetchErrorMessage(error);
+    if (
+      config &&
+      caminhosEnviados.length > 0
+    ) {
+      await removeUploadedAttachments(
+        config,
+        caminhosEnviados,
+      );
+    }
 
     console.error(
-      "Erro ao limpar anexos temporários:",
+      "Erro ao enviar pedido:",
       error,
     );
 
     return NextResponse.json(
       {
         ok: false,
-        message,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível enviar o pedido. Tente novamente.",
       },
       {
         status: 500,
