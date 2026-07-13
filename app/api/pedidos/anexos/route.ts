@@ -13,7 +13,7 @@ const PEDIDOS_BUCKET = "pedido-anexos";
 const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 const MAX_ATTACHMENTS = 10;
 
-type TipoAnexo = "PDF" | "PNG" | "JPG";
+type AttachmentType = "PDF" | "PNG" | "JPG";
 
 type ArquivoSolicitado = {
   id?: unknown;
@@ -26,8 +26,25 @@ type SignedUploadResponse = {
   url?: string;
 };
 
-function isAllowedAttachmentType(value: string): value is TipoAnexo {
-  return value === "PDF" || value === "PNG" || value === "JPG";
+type ErrorWithCause = Error & {
+  cause?: {
+    code?: string;
+    syscall?: string;
+    hostname?: string;
+    address?: string;
+    port?: number;
+    message?: string;
+  };
+};
+
+function isAllowedAttachmentType(
+  value: string,
+): value is AttachmentType {
+  return (
+    value === "PDF" ||
+    value === "PNG" ||
+    value === "JPG"
+  );
 }
 
 function safeFileName(name: string) {
@@ -56,6 +73,46 @@ function isSafeStoragePath(value: string) {
   );
 }
 
+function getFetchErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return "Erro desconhecido ao conectar com o Supabase.";
+  }
+
+  const errorWithCause = error as ErrorWithCause;
+  const cause = errorWithCause.cause;
+
+  if (!cause) {
+    return error.message;
+  }
+
+  const details = [
+    cause.code
+      ? `Código: ${cause.code}`
+      : "",
+    cause.syscall
+      ? `Operação: ${cause.syscall}`
+      : "",
+    cause.hostname
+      ? `Servidor: ${cause.hostname}`
+      : "",
+    cause.address
+      ? `Endereço: ${cause.address}`
+      : "",
+    cause.port
+      ? `Porta: ${cause.port}`
+      : "",
+    cause.message
+      ? `Causa: ${cause.message}`
+      : "",
+  ].filter(Boolean);
+
+  if (details.length === 0) {
+    return error.message;
+  }
+
+  return `${error.message}. ${details.join(" | ")}`;
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
@@ -77,9 +134,12 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           ok: false,
-          message: `Envie no máximo ${MAX_ATTACHMENTS} anexos por pedido.`,
+          message:
+            `Envie no máximo ${MAX_ATTACHMENTS} anexos por pedido.`,
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -122,51 +182,92 @@ export async function POST(request: Request) {
           {
             ok: false,
             message:
-              "Um dos anexos é inválido. Remova o arquivo e selecione-o novamente.",
+              "Um dos anexos é inválido. Remova o arquivo e selecione novamente.",
           },
-          { status: 400 },
+          {
+            status: 400,
+          },
         );
       }
 
       if (
         !Number.isFinite(tamanho) ||
-        tamanho <= 0 ||
-        tamanho > MAX_ATTACHMENT_SIZE
+        tamanho <= 0
       ) {
         return NextResponse.json(
           {
             ok: false,
             message:
-              "Cada arquivo precisa ter conteúdo e pode ter no máximo 20 MB.",
+              `O arquivo "${nome}" está vazio ou não pôde ser lido.`,
           },
-          { status: 400 },
+          {
+            status: 400,
+          },
         );
       }
 
-      const caminho =
-        `pedidos/${loteId}/${id}-${safeFileName(nome)}`;
+      if (tamanho > MAX_ATTACHMENT_SIZE) {
+        return NextResponse.json(
+          {
+            ok: false,
+            message:
+              `O arquivo "${nome}" ultrapassa o limite de 20 MB.`,
+          },
+          {
+            status: 400,
+          },
+        );
+      }
 
-      const response = await fetch(
-        `${config.url}/storage/v1/object/upload/sign/${PEDIDOS_BUCKET}/${encodeStoragePath(
-          caminho,
-        )}`,
-        {
+      const nomeSeguro = safeFileName(nome);
+
+      const caminho =
+        `pedidos/${loteId}/${id}-${nomeSeguro}`;
+
+      const endpoint =
+        `${config.url}/storage/v1/object/upload/sign/` +
+        `${PEDIDOS_BUCKET}/${encodeStoragePath(caminho)}`;
+
+      let response: Response;
+
+      try {
+        response = await fetch(endpoint, {
           method: "POST",
           headers: getSupabaseHeaders(config, {
             "Content-Type": "application/json",
           }),
-          body: JSON.stringify({}),
+          body: JSON.stringify({
+            upsert: false,
+          }),
           cache: "no-store",
-        },
-      );
+        });
+      } catch (error) {
+        const mensagemConexao =
+          getFetchErrorMessage(error);
+
+        console.error(
+          "Falha de conexão ao preparar o anexo:",
+          {
+            endpoint,
+            bucket: PEDIDOS_BUCKET,
+            caminho,
+            erro: mensagemConexao,
+          },
+        );
+
+        throw new Error(
+          `Não foi possível conectar ao Supabase para preparar "${nome}". ${mensagemConexao}`,
+        );
+      }
 
       if (!response.ok) {
         const mensagemSupabase =
           await getErrorMessage(response);
 
         console.error(
-          "Erro ao criar URL assinada do anexo:",
+          "Erro do Supabase ao preparar anexo:",
           {
+            endpoint,
             bucket: PEDIDOS_BUCKET,
             caminho,
             status: response.status,
@@ -175,7 +276,7 @@ export async function POST(request: Request) {
         );
 
         throw new Error(
-          `Não foi possível preparar o anexo "${nome}": ${mensagemSupabase}`,
+          `Não foi possível preparar o anexo "${nome}". ${mensagemSupabase}`,
         );
       }
 
@@ -183,8 +284,17 @@ export async function POST(request: Request) {
         (await response.json()) as SignedUploadResponse;
 
       if (!data.url) {
+        console.error(
+          "Supabase não retornou URL assinada:",
+          {
+            bucket: PEDIDOS_BUCKET,
+            caminho,
+            resposta: data,
+          },
+        );
+
         throw new Error(
-          `O Supabase não retornou um link para "${nome}".`,
+          `O Supabase não retornou um link de envio para "${nome}".`,
         );
       }
 
@@ -204,6 +314,8 @@ export async function POST(request: Request) {
       anexos,
     });
   } catch (error) {
+    const message = getFetchErrorMessage(error);
+
     console.error(
       "Erro ao preparar anexos do pedido:",
       error,
@@ -212,12 +324,11 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível preparar os anexos.",
+        message,
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 }
@@ -246,9 +357,13 @@ export async function DELETE(request: Request) {
 
     const config = getSupabaseServerConfig();
 
-    const response = await fetch(
-      `${config.url}/storage/v1/object/${PEDIDOS_BUCKET}`,
-      {
+    const endpoint =
+      `${config.url}/storage/v1/object/${PEDIDOS_BUCKET}`;
+
+    let response: Response;
+
+    try {
+      response = await fetch(endpoint, {
         method: "DELETE",
         headers: getSupabaseHeaders(config, {
           "Content-Type": "application/json",
@@ -257,22 +372,18 @@ export async function DELETE(request: Request) {
           prefixes: caminhos,
         }),
         cache: "no-store",
-      },
-    );
+      });
+    } catch (error) {
+      throw new Error(
+        `Falha ao conectar com o Supabase para limpar os anexos. ${getFetchErrorMessage(
+          error,
+        )}`,
+      );
+    }
 
     if (!response.ok) {
       const mensagemSupabase =
         await getErrorMessage(response);
-
-      console.error(
-        "Erro ao remover anexos temporários:",
-        {
-          bucket: PEDIDOS_BUCKET,
-          caminhos,
-          status: response.status,
-          mensagemSupabase,
-        },
-      );
 
       throw new Error(mensagemSupabase);
     }
@@ -281,6 +392,8 @@ export async function DELETE(request: Request) {
       ok: true,
     });
   } catch (error) {
+    const message = getFetchErrorMessage(error);
+
     console.error(
       "Erro ao limpar anexos temporários:",
       error,
@@ -289,12 +402,11 @@ export async function DELETE(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível limpar anexos temporários.",
+        message,
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 }
