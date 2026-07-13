@@ -44,9 +44,8 @@ export async function GET(request: Request) {
     const cookieStore = await cookies();
 
     const isAdmin =
-      cookieStore.get(
-        "global-sc-admin-session",
-      )?.value === "autorizado";
+      cookieStore.get("global-sc-admin-session")?.value ===
+      "autorizado";
 
     if (!isAdmin) {
       return NextResponse.json(
@@ -54,35 +53,33 @@ export async function GET(request: Request) {
           ok: false,
           message: "Acesso não autorizado.",
         },
-        { status: 401 },
+        {
+          status: 401,
+        },
       );
     }
 
     const requestUrl = new URL(request.url);
 
     const caminho =
-      requestUrl.searchParams
-        .get("caminho")
-        ?.trim() || "";
+      requestUrl.searchParams.get("caminho")?.trim() || "";
 
     const nome =
-      requestUrl.searchParams
-        .get("nome")
-        ?.trim() || "anexo";
+      requestUrl.searchParams.get("nome")?.trim() || "anexo";
 
     if (!isSafeStoragePath(caminho)) {
       return NextResponse.json(
         {
           ok: false,
-          message:
-            "O caminho do anexo é inválido.",
+          message: "O caminho do anexo é inválido.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
-    const config =
-      getSupabaseServerConfig();
+    const config = getSupabaseServerConfig();
 
     const response = await fetch(
       `${config.url}/storage/v1/object/sign/${PEDIDOS_BUCKET}/${encodeStoragePath(
@@ -101,18 +98,14 @@ export async function GET(request: Request) {
     );
 
     if (!response.ok) {
-      const mensagemSupabase =
-        await getErrorMessage(response);
+      const mensagemSupabase = await getErrorMessage(response);
 
-      console.error(
-        "Erro ao gerar link de download:",
-        {
-          bucket: PEDIDOS_BUCKET,
-          caminho,
-          status: response.status,
-          mensagemSupabase,
-        },
-      );
+      console.error("Erro ao gerar link de download:", {
+        bucket: PEDIDOS_BUCKET,
+        caminho,
+        status: response.status,
+        mensagemSupabase,
+      });
 
       throw new Error(mensagemSupabase);
     }
@@ -121,9 +114,7 @@ export async function GET(request: Request) {
       (await response.json()) as SignedDownloadResponse;
 
     const signedPath =
-      data.signedURL ||
-      data.signedUrl ||
-      "";
+      data.signedURL || data.signedUrl || "";
 
     if (!signedPath) {
       throw new Error(
@@ -142,14 +133,11 @@ export async function GET(request: Request) {
       getSafeDownloadName(nome),
     );
 
-    return NextResponse.redirect(
-      signedUrl.toString(),
-    );
+    return NextResponse.redirect(signedUrl.toString(), {
+      status: 302,
+    });
   } catch (error) {
-    console.error(
-      "Erro no download do anexo:",
-      error,
-    );
+    console.error("Erro no download do anexo:", error);
 
     return NextResponse.json(
       {
@@ -159,7 +147,9 @@ export async function GET(request: Request) {
             ? error.message
             : "Não foi possível baixar o anexo.",
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 }
