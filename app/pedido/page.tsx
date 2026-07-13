@@ -192,19 +192,49 @@ function formatCep(value: string) {
 }
 
 function getAttachmentType(file: File): Attachment["type"] | null {
-  if (file.type === "application/pdf") {
+  const extension = file.name
+    .split(".")
+    .pop()
+    ?.toLowerCase();
+
+  if (
+    file.type === "application/pdf" ||
+    extension === "pdf"
+  ) {
     return "PDF";
   }
 
-  if (file.type === "image/png") {
+  if (
+    file.type === "image/png" ||
+    extension === "png"
+  ) {
     return "PNG";
   }
 
-  if (file.type === "image/jpeg") {
+  if (
+    file.type === "image/jpeg" ||
+    file.type === "image/jpg" ||
+    extension === "jpg" ||
+    extension === "jpeg" ||
+    extension === "jfif"
+  ) {
     return "JPG";
   }
 
   return null;
+}
+
+function createAttachmentId() {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 14)}`;
 }
 
 
@@ -448,7 +478,7 @@ export default function PedidoPage() {
       }
 
       validAttachments.push({
-        id: `${file.name}-${file.lastModified}-${Math.random()}`,
+        id: createAttachmentId(),
         file,
         type,
       });

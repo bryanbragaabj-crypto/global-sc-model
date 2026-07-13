@@ -4,11 +4,12 @@ import "./globals.css";
 
 const URL_PRINCIPAL = "https://globalscaltoatacado.com";
 
-const TITULO =
-  "Global SC Alto Atacado | As Melhores Importadoras";
+const TITULO = "Global SC Alto Atacado | As Melhores Importadoras";
 
-const DESCRICAO =
-  "Encontre fornecedores confiáveis, visualize catálogos e envie seu pedido de forma rápida e prática.";
+const DESCRICAO = "Encontre fornecedores confiáveis, visualize catálogos e envie seu pedido de forma rápida e prática.";
+
+// Diretório da imagem que aparecerá no WhatsApp (precisa estar na pasta 'public')
+const IMAGEM_OG = "/og-image.jpg";
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_PRINCIPAL),
@@ -28,12 +29,21 @@ export const metadata: Metadata = {
     siteName: "Global SC Alto Atacado",
     title: TITULO,
     description: DESCRICAO,
+    images: [
+      {
+        url: IMAGEM_OG,
+        width: 1200,
+        height: 630,
+        alt: "Capa do site Global SC Alto Atacado",
+      },
+    ],
   },
 
   twitter: {
     card: "summary_large_image",
     title: TITULO,
     description: DESCRICAO,
+    images: [IMAGEM_OG],
   },
 
   robots: {

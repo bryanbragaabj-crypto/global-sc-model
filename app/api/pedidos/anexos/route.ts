@@ -13,17 +13,7 @@ const PEDIDOS_BUCKET = "pedido-anexos";
 const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 const MAX_ATTACHMENTS = 10;
 
-const ALLOWED_TYPES: Record<"PDF" | "PNG" | "JPG", string> = {
-  PDF: "application/pdf",
-  PNG: "image/png",
-  JPG: "image/jpeg",
-};
-
-function isAllowedAttachmentType(
-  value: string,
-): value is "PDF" | "PNG" | "JPG" {
-  return value === "PDF" || value === "PNG" || value === "JPG";
-}
+type TipoAnexo = "PDF" | "PNG" | "JPG";
 
 type ArquivoSolicitado = {
   id?: unknown;
@@ -32,17 +22,38 @@ type ArquivoSolicitado = {
   tamanho?: unknown;
 };
 
-function safeFileName(name: string) {
-  const normalized = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+type SignedUploadResponse = {
+  url?: string;
+};
 
-  return normalized
+function isAllowedAttachmentType(value: string): value is TipoAnexo {
+  return value === "PDF" || value === "PNG" || value === "JPG";
+}
+
+function safeFileName(name: string) {
+  const normalized = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  const safeName = normalized
     .replace(/[^a-zA-Z0-9._-]/g, "-")
     .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .slice(0, 120);
+
+  return safeName || `arquivo-${Date.now()}`;
 }
 
 function isSafeId(value: string) {
   return /^[a-zA-Z0-9._-]{8,120}$/.test(value);
+}
+
+function isSafeStoragePath(value: string) {
+  return (
+    value.startsWith("pedidos/") &&
+    value.length < 500 &&
+    !value.includes("..")
+  );
 }
 
 export async function POST(request: Request) {
@@ -51,10 +62,15 @@ export async function POST(request: Request) {
       arquivos?: ArquivoSolicitado[];
     };
 
-    const arquivos = Array.isArray(body.arquivos) ? body.arquivos : [];
+    const arquivos = Array.isArray(body.arquivos)
+      ? body.arquivos
+      : [];
 
     if (arquivos.length === 0) {
-      return NextResponse.json({ ok: true, anexos: [] });
+      return NextResponse.json({
+        ok: true,
+        anexos: [],
+      });
     }
 
     if (arquivos.length > MAX_ATTACHMENTS) {
@@ -69,6 +85,7 @@ export async function POST(request: Request) {
 
     const config = getSupabaseServerConfig();
     const loteId = crypto.randomUUID();
+
     const anexos: Array<{
       id: string;
       caminho: string;
@@ -76,56 +93,99 @@ export async function POST(request: Request) {
     }> = [];
 
     for (const arquivo of arquivos) {
-      const id = typeof arquivo.id === "string" ? arquivo.id : "";
-      const nome = typeof arquivo.nome === "string" ? arquivo.nome.trim() : "";
-      const tipo = typeof arquivo.tipo === "string" ? arquivo.tipo : "";
+      const id =
+        typeof arquivo.id === "string"
+          ? arquivo.id.trim()
+          : "";
+
+      const nome =
+        typeof arquivo.nome === "string"
+          ? arquivo.nome.trim()
+          : "";
+
+      const tipo =
+        typeof arquivo.tipo === "string"
+          ? arquivo.tipo.trim()
+          : "";
+
       const tamanho =
-        typeof arquivo.tamanho === "number" ? arquivo.tamanho : Number.NaN;
+        typeof arquivo.tamanho === "number"
+          ? arquivo.tamanho
+          : Number.NaN;
 
-      if (!isSafeId(id) || !nome || !isAllowedAttachmentType(tipo)) {
-        return NextResponse.json(
-          { ok: false, message: "Um dos anexos é inválido." },
-          { status: 400 },
-        );
-      }
-
-      if (!Number.isFinite(tamanho) || tamanho <= 0 || tamanho > MAX_ATTACHMENT_SIZE) {
+      if (
+        !isSafeId(id) ||
+        !nome ||
+        !isAllowedAttachmentType(tipo)
+      ) {
         return NextResponse.json(
           {
             ok: false,
-            message: "Cada arquivo pode ter no máximo 20 MB.",
+            message:
+              "Um dos anexos é inválido. Remova o arquivo e selecione-o novamente.",
           },
           { status: 400 },
         );
       }
 
-      const caminho = `pedidos/${loteId}/${id}-${safeFileName(nome)}`;
+      if (
+        !Number.isFinite(tamanho) ||
+        tamanho <= 0 ||
+        tamanho > MAX_ATTACHMENT_SIZE
+      ) {
+        return NextResponse.json(
+          {
+            ok: false,
+            message:
+              "Cada arquivo precisa ter conteúdo e pode ter no máximo 20 MB.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const caminho =
+        `pedidos/${loteId}/${id}-${safeFileName(nome)}`;
 
       const response = await fetch(
-        `${config.url}/storage/v1/object/upload/sign/${PEDIDOS_BUCKET}/${encodeStoragePath(caminho)}`,
+        `${config.url}/storage/v1/object/upload/sign/${PEDIDOS_BUCKET}/${encodeStoragePath(
+          caminho,
+        )}`,
         {
           method: "POST",
           headers: getSupabaseHeaders(config, {
             "Content-Type": "application/json",
           }),
           body: JSON.stringify({}),
+          cache: "no-store",
         },
       );
 
       if (!response.ok) {
+        const mensagemSupabase =
+          await getErrorMessage(response);
+
+        console.error(
+          "Erro ao criar URL assinada do anexo:",
+          {
+            bucket: PEDIDOS_BUCKET,
+            caminho,
+            status: response.status,
+            mensagemSupabase,
+          },
+        );
+
         throw new Error(
-          `Não foi possível preparar o anexo "${nome}": ${await getErrorMessage(
-            response,
-          )}`,
+          `Não foi possível preparar o anexo "${nome}": ${mensagemSupabase}`,
         );
       }
 
-      const data = (await response.json()) as {
-        url?: string;
-      };
+      const data =
+        (await response.json()) as SignedUploadResponse;
 
       if (!data.url) {
-        throw new Error(`O Supabase não retornou um link para "${nome}".`);
+        throw new Error(
+          `O Supabase não retornou um link para "${nome}".`,
+        );
       }
 
       const signedUrl = data.url.startsWith("http")
@@ -144,6 +204,11 @@ export async function POST(request: Request) {
       anexos,
     });
   } catch (error) {
+    console.error(
+      "Erro ao preparar anexos do pedido:",
+      error,
+    );
+
     return NextResponse.json(
       {
         ok: false,
@@ -164,16 +229,19 @@ export async function DELETE(request: Request) {
     };
 
     const caminhos = Array.isArray(body.caminhos)
-      ? body.caminhos.filter(
-          (caminho): caminho is string =>
-            typeof caminho === "string" &&
-            caminho.startsWith("pedidos/") &&
-            caminho.length < 500,
-        )
+      ? body.caminhos
+          .filter(
+            (caminho): caminho is string =>
+              typeof caminho === "string" &&
+              isSafeStoragePath(caminho),
+          )
+          .slice(0, MAX_ATTACHMENTS)
       : [];
 
     if (caminhos.length === 0) {
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({
+        ok: true,
+      });
     }
 
     const config = getSupabaseServerConfig();
@@ -185,16 +253,39 @@ export async function DELETE(request: Request) {
         headers: getSupabaseHeaders(config, {
           "Content-Type": "application/json",
         }),
-        body: JSON.stringify({ prefixes: caminhos }),
+        body: JSON.stringify({
+          prefixes: caminhos,
+        }),
+        cache: "no-store",
       },
     );
 
     if (!response.ok) {
-      throw new Error(await getErrorMessage(response));
+      const mensagemSupabase =
+        await getErrorMessage(response);
+
+      console.error(
+        "Erro ao remover anexos temporários:",
+        {
+          bucket: PEDIDOS_BUCKET,
+          caminhos,
+          status: response.status,
+          mensagemSupabase,
+        },
+      );
+
+      throw new Error(mensagemSupabase);
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+    });
   } catch (error) {
+    console.error(
+      "Erro ao limpar anexos temporários:",
+      error,
+    );
+
     return NextResponse.json(
       {
         ok: false,
