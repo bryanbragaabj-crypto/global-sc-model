@@ -1,7 +1,6 @@
 /*
   Cliente REST privado do Supabase sem dependência externa.
 
-  ATENÇÃO:
   Este arquivo deve ser usado somente em rotas do servidor.
   Nunca importe este arquivo em componentes com "use client".
 */
@@ -9,18 +8,7 @@
 export type SupabaseServerConfig = {
   url: string;
   secretKey: string;
-};
-
-type ErrorWithCause = Error & {
-  cause?: {
-    code?: string;
-    errno?: string | number;
-    syscall?: string;
-    hostname?: string;
-    address?: string;
-    port?: number;
-    message?: string;
-  };
+  keyType: "LEGACY_SERVICE_ROLE" | "SECRET";
 };
 
 function getOptionalEnv(name: string) {
@@ -51,13 +39,13 @@ function normalizeSupabaseUrl(value: string) {
     parsedUrl = new URL(cleanedValue);
   } catch {
     throw new Error(
-      "A variável NEXT_PUBLIC_SUPABASE_URL não contém uma URL válida.",
+      "NEXT_PUBLIC_SUPABASE_URL não contém uma URL válida.",
     );
   }
 
   if (parsedUrl.protocol !== "https:") {
     throw new Error(
-      "A URL do Supabase precisa começar com https://.",
+      "NEXT_PUBLIC_SUPABASE_URL precisa começar com https://.",
     );
   }
 
@@ -66,37 +54,104 @@ function normalizeSupabaseUrl(value: string) {
     parsedUrl.pathname !== ""
   ) {
     throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL deve conter somente a URL raiz do projeto, sem /rest/v1, /storage/v1 ou /dashboard.",
+      "NEXT_PUBLIC_SUPABASE_URL deve conter somente a URL raiz do projeto.",
     );
   }
 
   return parsedUrl.origin;
 }
 
+function decodeJwtPayload(token: string) {
+  try {
+    const parts = token.split(".");
+
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    const normalizedPayload = parts[1]
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const padding =
+      normalizedPayload.length % 4 === 0
+        ? ""
+        : "=".repeat(4 - (normalizedPayload.length % 4));
+
+    const decoded = Buffer.from(
+      normalizedPayload + padding,
+      "base64",
+    ).toString("utf8");
+
+    return JSON.parse(decoded) as {
+      role?: string;
+      ref?: string;
+      iss?: string;
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function getSupabaseServerConfig(): SupabaseServerConfig {
-  const rawUrl = getRequiredEnv(
-    "NEXT_PUBLIC_SUPABASE_URL",
+  const url = normalizeSupabaseUrl(
+    getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
   );
 
-  const url = normalizeSupabaseUrl(rawUrl);
+  const newSecretKey = getOptionalEnv(
+    "SUPABASE_SECRET_KEY",
+  );
 
-  /*
-    Aceita tanto a chave antiga service_role quanto
-    a chave secreta nova do Supabase.
-  */
-  const secretKey =
-    getOptionalEnv("SUPABASE_SECRET_KEY") ||
-    getOptionalEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const legacyServiceRoleKey = getOptionalEnv(
+    "SUPABASE_SERVICE_ROLE_KEY",
+  );
 
-  if (!secretKey) {
+  if (newSecretKey) {
+    if (!newSecretKey.startsWith("sb_secret_")) {
+      throw new Error(
+        "SUPABASE_SECRET_KEY não possui o formato esperado sb_secret_...",
+      );
+    }
+
+    return {
+      url,
+      secretKey: newSecretKey,
+      keyType: "SECRET",
+    };
+  }
+
+  if (!legacyServiceRoleKey) {
     throw new Error(
       "Configure SUPABASE_SECRET_KEY ou SUPABASE_SERVICE_ROLE_KEY na Vercel.",
     );
   }
 
+  /*
+    A chave service_role antiga é um JWT.
+    Esta validação evita colocar a chave anon por engano.
+  */
+  const payload = decodeJwtPayload(
+    legacyServiceRoleKey,
+  );
+
+  if (!payload) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY não é um JWT válido. Se estiver usando uma chave sb_secret_, coloque-a em SUPABASE_SECRET_KEY.",
+    );
+  }
+
+  if (payload.role !== "service_role") {
+    throw new Error(
+      `A chave colocada em SUPABASE_SERVICE_ROLE_KEY possui role "${
+        payload.role || "desconhecida"
+      }", mas deveria ser "service_role". Você provavelmente colocou a chave anon.`,
+    );
+  }
+
   return {
     url,
-    secretKey,
+    secretKey: legacyServiceRoleKey,
+    keyType: "LEGACY_SERVICE_ROLE",
   };
 }
 
@@ -104,6 +159,20 @@ export function getSupabaseHeaders(
   config: SupabaseServerConfig,
   extraHeaders: HeadersInit = {},
 ): HeadersInit {
+  /*
+    Chaves novas sb_secret_ não são JWTs.
+    Elas devem ser enviadas somente no cabeçalho apikey.
+
+    A chave service_role antiga é JWT e pode ser enviada
+    também em Authorization: Bearer.
+  */
+  if (config.keyType === "SECRET") {
+    return {
+      apikey: config.secretKey,
+      ...extraHeaders,
+    };
+  }
+
   return {
     apikey: config.secretKey,
     Authorization: `Bearer ${config.secretKey}`,
@@ -143,63 +212,17 @@ export async function getErrorMessage(
         data.details ||
         data.hint;
 
-      if (message) {
-        return `${message} (HTTP ${response.status})`;
-      }
-
-      return `Erro no Supabase. HTTP ${response.status}.`;
+      return message
+        ? `${message} (HTTP ${response.status})`
+        : `Erro no Supabase. HTTP ${response.status}.`;
     }
 
     const text = await response.text();
 
-    if (text) {
-      return `${text} (HTTP ${response.status})`;
-    }
-
-    return `Erro no Supabase. HTTP ${response.status}.`;
+    return text
+      ? `${text} (HTTP ${response.status})`
+      : `Erro no Supabase. HTTP ${response.status}.`;
   } catch {
     return `Erro no Supabase. HTTP ${response.status}.`;
   }
-}
-
-export function getThrownErrorMessage(
-  error: unknown,
-) {
-  if (!(error instanceof Error)) {
-    return "Erro desconhecido ao conectar com o Supabase.";
-  }
-
-  const errorWithCause = error as ErrorWithCause;
-  const cause = errorWithCause.cause;
-
-  if (!cause) {
-    return error.message;
-  }
-
-  const details = [
-    cause.code
-      ? `código: ${cause.code}`
-      : "",
-    cause.syscall
-      ? `operação: ${cause.syscall}`
-      : "",
-    cause.hostname
-      ? `servidor: ${cause.hostname}`
-      : "",
-    cause.address
-      ? `endereço: ${cause.address}`
-      : "",
-    cause.port
-      ? `porta: ${cause.port}`
-      : "",
-    cause.message
-      ? `causa: ${cause.message}`
-      : "",
-  ].filter(Boolean);
-
-  if (details.length === 0) {
-    return error.message;
-  }
-
-  return `${error.message} — ${details.join(" | ")}`;
 }
