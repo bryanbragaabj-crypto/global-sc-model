@@ -180,8 +180,7 @@ const suppliers: Supplier[] = [
       "oculos",
     ],
   },
-];
-{
+ {
     id: 5,
     name: "Top Representações",
     slug: "top-representacoes",
