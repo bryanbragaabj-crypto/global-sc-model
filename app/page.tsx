@@ -181,6 +181,48 @@ const suppliers: Supplier[] = [
     ],
   },
 ];
+{
+    id: 5,
+    name: "Top Representações",
+    slug: "top-representacoes",
+    image: "top-representacoes.png",
+    catalogPath: "https://top-representacoes.globalscaltoatacado.com",
+    b2bUrl: "https://top-representacoes.globalscaltoatacado.com",
+    categories: [
+      "Vasos",
+      "Utensílios para casa",
+      "Utensílios de cozinha e talheres",
+      "Talheres",
+      "Potes de vidro tigelas e garrafas",
+      "Papelaria",
+      "viagem",
+      "Jogos",
+      "bolsa"
+      "eletronicos",
+      "Ferramentas e utilidades",
+      "Despensa",
+      "Cinta modeladora e roupa íntima feminina",
+      "Canecas copos e xícaras",
+      "Brinquedos e esporte",
+      "Balança digital",
+      "Acessórios para pet",
+      "Acessórios de cabelo",
+    ],
+    keywords: [
+      "top",
+      "casa",
+      "cozinha",
+      "lar",
+      "pet",
+      "eletronicos",
+      "utilidades",
+      "brinquedos",
+      "vasos",
+      "talheres",
+      "papelaria",
+      "ferramentas",
+    ],
+  },
 
 function normalizeText(value: string) {
   return value
