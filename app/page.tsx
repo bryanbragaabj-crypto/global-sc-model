@@ -222,7 +222,7 @@ const suppliers: Supplier[] = [
       "ferramentas",
     ],
   },
-
+];
 function normalizeText(value: string) {
   return value
     .normalize("NFD")
