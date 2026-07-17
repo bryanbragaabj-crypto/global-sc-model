@@ -196,8 +196,8 @@ const suppliers: Supplier[] = [
       "Papelaria",
       "viagem",
       "Jogos",
-      "bolsa"
-      "eletronicos",
+      "bolsa",
+      "ELETRONICOS",
       "Ferramentas e utilidades",
       "Despensa",
       "Cinta modeladora e roupa íntima feminina",
