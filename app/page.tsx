@@ -184,7 +184,7 @@ const suppliers: Supplier[] = [
     id: 5,
     name: "Top Representações",
     slug: "top-representacoes",
-    image: "top-representacoes.png",
+    image: "/top-representacoes.png",
     catalogPath: "https://top-representacoes.globalscaltoatacado.com",
     b2bUrl: "https://top-representacoes.globalscaltoatacado.com",
     categories: [
