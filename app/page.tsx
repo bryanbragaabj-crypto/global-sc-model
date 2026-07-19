@@ -124,7 +124,7 @@ const suppliers: Supplier[] = [
     ],
   },
   {
-    id: ,
+    id: 4,
     name: "Importadora do Cunha",
     slug: "importadora-do-cunha",
     image: "/cunha.png",
