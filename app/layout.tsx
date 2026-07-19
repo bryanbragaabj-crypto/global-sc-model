@@ -17,16 +17,14 @@ export const metadata: Metadata = {
     canonical: URL_PRINCIPAL,
   },
   
-  // NOVA SEÇÃO: Configuração do Favicon com arquivos baseados na sua imagem
-  // Certifique-se de que estes arquivos existam na pasta 'public'
+  // SEÇÃO CORRIGIDA: Apontando diretamente para o arquivo icone-global.png
   icons: {
     icon: [
-      { url: '/favicon.ico' }, // Recomendado converter sua imagem para .ico
-      { url: '/icon-32x32.png', sizes: '32x32', type: 'image/png' }, // Versão otimizada em PNG
+      { url: '/icone-global.png' }, // Aqui está a sua imagem corretamente referenciada
     ],
-    shortcut: ['/favicon.ico'],
+    shortcut: ['/icone-global.png'],
     apple: [
-      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }, // Versão Retina para Apple
+      { url: '/icone-global.png', type: 'image/png' },
     ],
   },
 
