@@ -14,6 +14,158 @@ type Supplier = {
   keywords: string[];
 };
 
+// Termos do mix completo atendido pela Top Representações. Este é um índice
+// geral da página principal e não pertence a uma importadora específica.
+const topRepresentacoesProductItems = [
+  "Colcha", "Cobre-leito", "Lençol", "Fronha", "Jogo de cama", "Tapete",
+  "Carpete", "Tapete para banheiro", "Tapete para cozinha", "Tapete para sala",
+  "Guardanapo", "Pano de prato", "Toalha de banho", "Toalha de rosto",
+  "Toalha de praia", "Roupão", "Manta", "Coberta", "Manta infantil",
+  "Coberta infantil", "Naninha", "Cortina", "Capa de almofada",
+  "Capa de cadeira", "Varal", "Prendedor de roupas", "Cabide", "Sapateira",
+  "Arara para roupas", "Tábua de passar", "Ferro de passar", "Vaporizador",
+  "Potes", "Pote hermético", "Pote de vidro", "Porta mantimentos",
+  "Porta temperos", "Porta condimentos", "Galheteiro", "Saleiro",
+  "Formas e assadeiras", "Forma de silicone", "Forma para air fryer",
+  "Forma de gelo", "Forma de picolé", "Forma de cupcake", "Forma para pão",
+  "Forma para pudim", "Forma de pizza", "Suqueira", "Xícara", "Caneca",
+  "Copo", "Taça", "Jarra", "Garrafa", "Garrafa térmica", "Garrafa isotérmica",
+  "Chaleira", "Chaleira elétrica", "Cafeteira elétrica", "Bomboniere",
+  "Moringa", "Baleiro", "Petisqueira", "Saladeira", "Manteigueira",
+  "Jogo americano", "Jogo de jantar", "Aparelho de jantar", "Prato",
+  "Talheres", "Faqueiro", "Faca", "Garfo", "Colher", "Escumadeira",
+  "Espátula", "Concha", "Pegador", "Batedor", "Fouet", "Ralador",
+  "Descascador", "Peneira", "Abridor de lata", "Abridor de garrafa",
+  "Saca-rolhas", "Cortador de pizza", "Afiador de faca", "Tábua de corte",
+  "Tábua de carne", "Tábua de bambu", "Kit churrasco", "Kit confeiteiro",
+  "Espremedor", "Amassador de alho", "Amassador de batata", "Moedor",
+  "Processador", "Mini processador", "Triturador elétrico", "Liquidificador",
+  "Blender", "Mixer", "Air fryer", "Air fryer oven", "Panela elétrica",
+  "Panela de arroz elétrica", "Panela de pressão elétrica", "Panela",
+  "Frigideira", "Caçarola", "Cuscuzeira", "Fogão elétrico", "Cooktop",
+  "Fogareiro", "Sanduicheira", "Grill", "Marmita", "Marmita elétrica",
+  "Lava-louças", "Balança de cozinha", "Luva térmica", "Avental",
+  "Escorredor de louças", "Escorredor de alimentos", "Fruteira",
+  "Cesto de fritura", "Conservação de alimentos", "Dispenser de alimentos",
+  "Dispenser de copos", "Dispenser de sacolas", "Bomba de água",
+  "Baldes", "Balde de gelo", "Lixeira", "Cesto", "Cesto dobrável",
+  "Caixa organizadora", "Organizador multiuso", "Carrinho multiuso",
+  "Carrinho de compras", "Estante multiuso", "Mesa para notebook",
+  "Mesa de apoio", "Banqueta", "Banqueta dobrável", "Cadeira dobrável",
+  "Cadeira de praia", "Cadeira de escritório", "Guarda-sol",
+  "Guarda-chuva", "Sombrinha", "Capa de chuva", "Barraca de camping",
+  "Caixa térmica", "Bolsa térmica", "Sacola térmica", "Galão térmico",
+  "Mop", "Mop spray", "Refil de mop", "Esfregão", "Rodo", "Vassoura",
+  "Pá plástica", "Espanador", "Escova de limpeza", "Pano de microfibra",
+  "Esponja", "Tira pelos", "Papa bolinha", "Regador", "Borrifador",
+  "Desentupidor", "Assento sanitário", "Cortina para banheiro",
+  "Kit banheiro", "Saboneteira", "Dispenser de sabonete", "Porta papel higiênico",
+  "Torneira", "Chuveiro", "Ducha higiênica", "Registro", "Engate flexível",
+  "Mangueira", "Esguicho", "Irrigador", "Jardinagem", "Kit jardinagem",
+  "Vaso", "Vaso sanitário", "Flor artificial", "Papel de parede",
+  "Luminária", "Abajur", "Luminária de mesa", "Lâmpada LED", "Plafon",
+  "Spot", "Arandela", "Projetor LED", "Refletor", "Espeto LED", "Fita LED",
+  "Perfil LED", "Lanterna", "Lanterna de cabeça", "Lâmpada solar",
+  "Ventilador", "Climatizador", "Aquecedor de ar", "Aquecedor de água",
+  "Umidificador", "Difusor", "Cortina de ar", "Aspirador de pó",
+  "Escova secadora", "Secador de cabelo", "Prancha de cabelo",
+  "Máquina de barba", "Massageador", "Balança corporal", "Termômetro",
+  "Necessaire", "Porta-joias", "Espelho", "Organizador de maquiagem",
+  "Itens de maquiagem", "Kit de costura", "Relógio", "Relógio despertador",
+  "Relógio de parede", "Relógio inteligente", "Óculos", "Óculos de sol",
+  "Bolsa", "Mochila", "Mochila infantil", "Mochila feminina", "Lancheira",
+  "Estojo", "Carteira", "Pochete", "Mala de viagem", "Mala de bordo",
+  "Frasqueira", "Almofada de viagem", "Máscara de dormir", "Kit viagem",
+  "Cadeado", "Cinto", "Lenço", "Echarpe", "Meias", "Touca",
+  "Papelaria", "Material escolar", "Caderno", "Agenda", "Bloco de notas",
+  "Lápis", "Lápis de cor", "Lapiseira", "Caneta", "Canetinha", "Marca-texto",
+  "Marcador permanente", "Giz de cera", "Borracha", "Apontador", "Régua",
+  "Compasso", "Calculadora", "Cola", "Cola quente", "Pistola de cola quente",
+  "Corretivo", "Massinha de modelar", "EVA", "Papel contact", "Papel A4",
+  "Papel fotográfico", "Etiqueta", "Fita adesiva", "Fita dupla face",
+  "Tesoura", "Estilete", "Grampeador", "Grampo", "Perfurador",
+  "Prancheta", "Quadro branco", "Lousa mágica", "Tela de pintura",
+  "Cavalete", "Pincel artístico", "Tinta aquarela", "Tinta a óleo",
+  "Carimbo", "Clips", "Binder clip", "Porta-lápis", "Organizador de mesa",
+  "Refiladora de papel", "Plastificação", "Pasta multiuso",
+  "Ferramentas", "Ferramentas manuais", "Ferramentas elétricas", "Alicate",
+  "Alicate crimpador", "Trena", "Martelo", "Marreta", "Broca", "Serra copo",
+  "Serra circular", "Serra sabre", "Serra mármore", "Serrote", "Tico-tico",
+  "Motosserra elétrica", "Furadeira", "Parafusadeira", "Martelete",
+  "Lixadeira", "Esmerilhadeira", "Tupia", "Plaina elétrica", "Soprador",
+  "Soprador de folhas", "Lavadora de alta pressão", "Pistola de pregos",
+  "Pinador pneumático", "Pulverizador", "Ferro de solda", "Maçarico",
+  "Chave de fenda", "Chave Phillips", "Chave Allen", "Chave inglesa",
+  "Chave catraca", "Chave de impacto", "Chave de roda", "Soquete",
+  "Ponteira", "Chave mandril", "Jogo de ferramentas", "Desencapador",
+  "Rebitador", "Lima", "Espátula", "Desempenadeira", "Pincel de pintura",
+  "Rolo de pintura", "Bandeja de pintura", "Escova de aço", "Nível",
+  "Nível laser", "Esquadro", "Paquímetro", "Multímetro", "Amperímetro",
+  "Caneta teste", "Disco de corte", "Abraçadeira", "Enforca-gato",
+  "Parafuso", "Prego", "Rebite", "Dobradiça", "Corrediça telescópica",
+  "Cantoneira", "Rodízio", "Puxador", "Suporte para TV", "Olho mágico",
+  "Trinco de porta", "Cadeado com sirene", "Compressor de ar",
+  "Inflador elétrico", "Bomba de ar", "Macaco hidráulico", "Transpalete",
+  "Cinta de amarração", "Caixa de ferramentas", "Bolsa de ferramentas",
+  "Mochila de ferramentas", "Cinto de ferramentas", "Cortador de vidro",
+  "Scanner automotivo", "Câmera endoscópica", "Cabo para bateria",
+  "Carregador de bateria", "Acessórios automotivos", "Capa para volante",
+  "Pneu", "Bike", "Bicicleta", "Elétrica e acessórios", "Tomada",
+  "Extensão elétrica", "Filtro de linha", "Plug adaptador",
+  "Carregador portátil", "Carregador de celular", "Carregador veicular",
+  "Fone de ouvido", "Fone Bluetooth", "Rádio", "Caixa de som",
+  "Microfone", "Microfone de lapela", "Karaokê", "Teclado", "Mouse",
+  "Cabo de celular", "Cabo DisplayPort", "Cabo de força", "Fonte USB",
+  "Hub USB", "Adaptador Wi-Fi", "Adaptador Bluetooth", "Pendrive",
+  "Cartão de memória", "Câmera", "Câmera inteligente", "Ring LED",
+  "Projetor", "Televisão", "Videogame", "Controle gamer", "Roteador",
+  "Antena", "Controle remoto", "Starlink", "Drone", "Tripé", "Bastão de selfie",
+  "Capinha de celular", "Capa para tablet", "Suporte para celular",
+  "Suporte para notebook", "Ampliador de tela", "Pilhas", "Cofre eletrônico",
+  "Veículos elétricos", "Moto elétrica", "Área pet", "Acessórios para pet",
+  "Brinquedo para pet", "Tapete para pet", "Removedor de pelos pet",
+  "Brinquedos", "Boneca", "Carrinho", "Carrinho de controle remoto",
+  "Robô", "Dinossauro", "Avião de brinquedo", "Helicóptero de brinquedo",
+  "Moto de brinquedo", "Locomotiva", "Pista de carrinho", "Patinete infantil",
+  "Lança bolha", "Pistola de água", "Lança dardos", "Lança disco",
+  "Aqua game", "Watergame", "Cubo mágico", "Quebra-cabeça", "Pescaria",
+  "Hockey de mesa", "Sinuca de mesa", "Pebolim", "Tabela de basquete",
+  "Corda de pular", "Guitarra infantil", "Teclado infantil", "Piano infantil",
+  "Microfone infantil", "Celular de brinquedo", "Caixa registradora",
+  "Kit cozinha infantil", "Kit limpeza infantil", "Kit médico infantil",
+  "Kit ferramentas infantil", "Kit beleza infantil", "Kit maquiagem infantil",
+  "Lousa infantil", "Projetor infantil", "Tapete interativo",
+  "Tapete infantil", "Tapete de atividades", "Tenda infantil",
+  "Piscina inflável", "Infláveis", "Barraca infantil", "Brinquedo musical",
+  "Brinquedo educativo", "Bola de gude", "Bola de vidro", "Bolinha de gude",
+  "Esportes", "Acessórios esportivos", "Badminton", "Tênis", "Tênis de mesa",
+  "Pickleball", "Frescobol", "Raquete", "Bola", "Futebol", "Vôlei",
+  "Basquete", "Natação", "Óculos de natação", "Touca de natação",
+  "Snorkel", "Mergulho", "Yoga", "Faixa elástica", "Bandagem",
+  "Camping", "Papelaria", "Natal",
+];
+
+const topRepresentacoesProducts = topRepresentacoesProductItems.filter(
+  (product, index, products) => {
+    const normalizedProduct = product
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+    return (
+      products.findIndex(
+        (candidate) =>
+          candidate
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim() === normalizedProduct,
+      ) === index
+    );
+  },
+);
+
 const suppliers: Supplier[] = [
   
   {
@@ -310,11 +462,14 @@ export default function Home() {
   const queryWords = normalizedQuery.split(/\s+/).filter(Boolean);
 
   const allTerms = useMemo(() => {
-    const terms = suppliers.flatMap((supplier) => [
-      supplier.name,
-      ...supplier.categories,
-      ...supplier.keywords,
-    ]);
+    const terms = [
+      ...topRepresentacoesProducts,
+      ...suppliers.flatMap((supplier) => [
+        supplier.name,
+        ...supplier.categories,
+        ...supplier.keywords,
+      ]),
+    ];
 
     return Array.from(new Set(terms)).sort((first, second) =>
       first.localeCompare(second, "pt-BR"),
@@ -333,6 +488,18 @@ export default function Home() {
 
   const filteredSuppliers = useMemo(() => {
     if (!queryWords.length) {
+      return suppliers;
+    }
+
+    const topRepresentacoesSearchText = normalizeText(
+      topRepresentacoesProducts.join(" "),
+    );
+
+    if (
+      queryWords.every((word) =>
+        topRepresentacoesSearchText.includes(word),
+      )
+    ) {
       return suppliers;
     }
 
