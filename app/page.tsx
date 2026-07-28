@@ -168,9 +168,50 @@ const topRepresentacoesProducts = topRepresentacoesProductItems.filter(
 );
 
 const suppliers: Supplier[] = [
-  
   {
-    id: 1,
+  id: 1,
+    name: "Top Representações",
+    slug: "top-representacoes",
+    image: "/top-representacoes.png",
+    catalogPath: "https://top-representacoes.globalscaltoatacado.com",
+    b2bUrl: "https://top-representacoes.globalscaltoatacado.com",
+    categories: [
+      "Vasos",
+      "Utensílios para casa",
+      "Utensílios de cozinha e talheres",
+      "Talheres",
+      "Potes de vidro tigelas e garrafas",
+      "Papelaria",
+      "viagem",
+      "Jogos",
+      "bolsa",
+      "ELETRONICOS",
+      "Ferramentas e utilidades",
+      "Despensa",
+      "Cinta modeladora e roupa íntima feminina",
+      "Canecas copos e xícaras",
+      "Brinquedos e esporte",
+      "Balança digital",
+      "Acessórios para pet",
+      "Acessórios de cabelo",
+    ],
+    keywords: [
+      "top",
+      "casa",
+      "cozinha",
+      "lar",
+      "pet",
+      "eletronicos",
+      "utilidades",
+      "brinquedos",
+      "vasos",
+      "talheres",
+      "papelaria",
+      "ferramentas",
+    ],
+  },
+  {
+    id: 2,
     name: "Importadora Kontudo",
     slug: "kontudo",
     image: "/kontudo.png",
@@ -220,7 +261,7 @@ const suppliers: Supplier[] = [
     ],
   },
   {
-    id: 2,
+    id: 3,
     name: "Kontudo Surf",
     slug: "kontudo-surf",
     image: "/kontudo-surf.png",
@@ -243,7 +284,7 @@ const suppliers: Supplier[] = [
     ],
   },
   {
-    id: 3,
+    id: 4,
     name: "Importadora do Cunha",
     slug: "importadora-do-cunha",
     image: "/cunha.png",
@@ -291,7 +332,7 @@ const suppliers: Supplier[] = [
     ],
   },
   {
-    id: 4,
+    id: 5,
     name: "SC Fashion",
     slug: "sc-fashion",
     image: "/sc-fashion.png",
@@ -353,8 +394,8 @@ const suppliers: Supplier[] = [
       "oculos",
     ],
   },
+    
 ];
-
 function normalizeText(value: string) {
   return value
     .normalize("NFD")
