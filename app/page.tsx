@@ -12,7 +12,6 @@ type Supplier = {
   b2bUrl: string;
   categories: string[];
   keywords: string[];
-  segments: string[];
 };
 
 // Termos do mix completo atendido pela Top Representações. Este é um índice
@@ -175,14 +174,6 @@ const suppliers: Supplier[] = [
     image: "/top-representacoes.png",
     catalogPath: "https://top-representacoes.globalscaltoatacado.com",
     b2bUrl: "https://top-representacoes.globalscaltoatacado.com",
-    segments: [
-      "Utilidades do Lar",
-      "Cama, Mesa e Banho",
-      "Eletrônicos e acessórios",
-      "Acessórios para Pet",
-      "Maquiagem",
-      "Brinquedos",
-    ],
     categories: [
       "Vasos",
       "Utensílios para casa",
@@ -225,12 +216,6 @@ const suppliers: Supplier[] = [
     image: "/kontudo.png",
     catalogPath: "/catalogos/kontudo",
     b2bUrl: "https://importadorakontudo.pedidook.com.br",
-    segments: [
-      "Confecção de Inverno",
-      "Roupa Íntima Fem. Masc. e Infantil",
-      "Acessórios de Cabelo",
-      "Fitness",
-    ],
     categories: [
       "Inverno infantil",
       "Blusinha feminina",
@@ -275,7 +260,6 @@ const suppliers: Supplier[] = [
     image: "/kontudo-surf.png",
     catalogPath: "/catalogos/kontudo-surf",
     b2bUrl: "https://importadorakontudosurf.pedidook.com.br",
-    segments: ["Confecção de Inverno"],
     categories: [
       "Roupas de inverno feminino masculino e infantil",
       "Conjuntos moletom feminino masculino e infantil",
@@ -298,13 +282,6 @@ const suppliers: Supplier[] = [
     image: "/cunha.png",
     catalogPath: "/catalogos/importadora-do-cunha",
     b2bUrl: "https://importadoradocunha.pedidook.com.br",
-    segments: [
-      "Utilidades do Lar",
-      "Acessórios para Pet",
-      "Flores Artificiais",
-      "Acessórios de Cabelo",
-      "Jogos",
-    ],
     categories: [
       "Vasos",
       "Utensílios para casa",
@@ -346,12 +323,6 @@ const suppliers: Supplier[] = [
     image: "/sc-fashion.png",
     catalogPath: "/catalogos/sc-fashion",
     b2bUrl: "https://scfashionatacadista.com",
-    segments: [
-      "Confecção de Inverno",
-      "Confecção de Verão",
-      "Acessórios para Praia",
-      "Brinquedos",
-    ],
     categories: [
       "Hidratante corporal",
       "Perfume",
@@ -624,24 +595,12 @@ export default function Home() {
         <div className="layout-container hero-content">
           <Image
             src="/banner-principal.png"
-            alt="Navio cargueiro da Global SC"
+            alt="Global SC - As Melhores Importadoras"
             width={1825}
             height={862}
             priority
             className="hero-image"
           />
-
-          <div className="hero-copy">
-            <p className="hero-copy__eyebrow">Conectamos sua Empresa</p>
-            <p className="hero-copy__title">
-              As Melhores
-              <strong>Importadoras</strong>
-            </p>
-            <p className="hero-copy__description">
-              Encontre fornecedores confiáveis, visualize catálogos e envie seu
-              pedido de forma rápida e prática.
-            </p>
-          </div>
         </div>
       </section>
 
@@ -699,28 +658,11 @@ export default function Home() {
                 <article className="supplier-banner" key={supplier.id}>
                   <Image
                     src={supplier.image}
-                    alt={`Identidade visual da ${supplier.name}`}
+                    alt={`Banner da ${supplier.name}`}
                     width={1269}
                     height={162}
                     className="supplier-image"
                   />
-
-                  <span className="supplier-action-label supplier-action-label--pdf">
-                    Visualizar PDF
-                  </span>
-
-                  <div className={`supplier-segments supplier-segments--${supplier.slug}`}>
-                    <strong>Segmentos:</strong>
-                    <ul>
-                      {supplier.segments.map((segment) => (
-                        <li key={segment}>{segment}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <span className="supplier-action-label supplier-action-label--b2b">
-                    Visualizar B2B
-                  </span>
 
                   <a
                     href={supplier.catalogPath}
