@@ -169,12 +169,20 @@ const topRepresentacoesProducts = topRepresentacoesProductItems.filter(
 
 const suppliers: Supplier[] = [
   {
-  id: 1,
+    id: 1,
     name: "Top Representações",
     slug: "top-representacoes",
     image: "/top-representacoes.png",
     catalogPath: "https://top-representacoes.globalscaltoatacado.com",
     b2bUrl: "https://top-representacoes.globalscaltoatacado.com",
+    segments: [
+      "Utilidades do Lar",
+      "Cama, Mesa e Banho",
+      "Eletrônicos e acessórios",
+      "Acessórios para Pet",
+      "Maquiagem",
+      "Brinquedos",
+    ],
     categories: [
       "Vasos",
       "Utensílios para casa",
