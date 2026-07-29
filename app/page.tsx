@@ -213,7 +213,7 @@ const suppliers: Supplier[] = [
     id: 2,
     name: "Importadora Kontudo",
     slug: "kontudo",
-    image: "/kontudo.png",
+    image: "/kontudo-4k.png",
     catalogPath: "/catalogos/kontudo",
     b2bUrl: "https://importadorakontudo.pedidook.com.br",
     categories: [
@@ -257,7 +257,7 @@ const suppliers: Supplier[] = [
     id: 3,
     name: "Kontudo Surf",
     slug: "kontudo-surf",
-    image: "/kontudo-surf.png",
+    image: "/kontudo-surf-4k.png",
     catalogPath: "/catalogos/kontudo-surf",
     b2bUrl: "https://importadorakontudosurf.pedidook.com.br",
     categories: [
@@ -279,7 +279,7 @@ const suppliers: Supplier[] = [
     id: 4,
     name: "Importadora do Cunha",
     slug: "importadora-do-cunha",
-    image: "/cunha.png",
+    image: "/cunha-4k.png",
     catalogPath: "/catalogos/importadora-do-cunha",
     b2bUrl: "https://importadoradocunha.pedidook.com.br",
     categories: [
@@ -320,7 +320,7 @@ const suppliers: Supplier[] = [
     id: 5,
     name: "SC Fashion",
     slug: "sc-fashion",
-    image: "/sc-fashion.png",
+    image: "/sc-fashion-4k.png",
     catalogPath: "/catalogos/sc-fashion",
     b2bUrl: "https://scfashion.globalscaltoatacado.com/",
     categories: [
@@ -659,8 +659,9 @@ export default function Home() {
                   <Image
                     src={supplier.image}
                     alt={`Banner da ${supplier.name}`}
-                    width={1269}
-                    height={162}
+                    width={5076}
+                    height={648}
+                    unoptimized
                     className="supplier-image"
                   />
 
