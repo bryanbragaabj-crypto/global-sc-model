@@ -805,6 +805,11 @@ export default function Home() {
               <FooterIcon type="cart" />
               COMO COMPRAR ?
             </a>
+
+            <a className="footer-chip" href="/solucoes-digitais">
+              <FooterIcon type="document" />
+              SOLUÇÕES DIGITAIS
+            </a>
           </section>
 
           <section className="footer-tiago" aria-label="Equipe comercial">
