@@ -322,7 +322,7 @@ const suppliers: Supplier[] = [
     slug: "sc-fashion",
     image: "/sc-fashion.png",
     catalogPath: "/catalogos/sc-fashion",
-    b2bUrl: "https://scfashionatacadista.com",
+    b2bUrl: "https://scfashion.globalscaltoatacado.com/",
     categories: [
       "Hidratante corporal",
       "Perfume",
