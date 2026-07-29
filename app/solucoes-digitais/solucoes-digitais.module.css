@@ -1,0 +1,383 @@
+.page {
+  --background: #0d2222;
+  --background-deep: #061616;
+  --panel: #102d2d;
+  --gold: #d6b56d;
+  --gold-bright: #e4c678;
+  --text: #f7f7f2;
+  --muted: #d8e6e6;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--background);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.backButton {
+  position: fixed;
+  z-index: 50;
+  top: 18px;
+  left: 18px;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: var(--gold);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+  color: var(--background-deep);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.hero {
+  display: flex;
+  min-height: 520px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 92px 28px 76px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(214, 181, 109, 0.12), transparent 35%),
+    var(--background-deep);
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 36px;
+  color: var(--gold);
+  font-size: clamp(15px, 2vw, 22px);
+}
+
+.hero h1 {
+  max-width: 1100px;
+  margin: 0;
+  font-size: clamp(36px, 5.4vw, 72px);
+  line-height: 1.06;
+}
+
+.heroText {
+  max-width: 1080px;
+  margin: 24px auto 46px;
+  color: var(--muted);
+  font-size: clamp(17px, 2vw, 24px);
+  line-height: 1.45;
+}
+
+.primaryButton,
+.planButton {
+  display: inline-flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 38px;
+  border-radius: 24px;
+  background: var(--gold);
+  color: var(--background-deep);
+  font-size: 18px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.primaryButton:hover,
+.planButton:hover,
+.backButton:hover {
+  background: var(--gold-bright);
+  transform: translateY(-2px);
+}
+
+.intro,
+.comparison,
+.notes,
+.cta {
+  width: min(1240px, calc(100% - 40px));
+  margin: 58px auto;
+  border-radius: 30px;
+  background: var(--panel);
+}
+
+.intro {
+  padding: 38px 42px;
+}
+
+.intro h2,
+.sectionHeading h2,
+.comparison h2,
+.addons h2,
+.notes h2,
+.cta h2 {
+  margin: 0 0 14px;
+  color: var(--gold);
+  font-size: clamp(28px, 3.5vw, 46px);
+}
+
+.intro p,
+.addons p,
+.notes p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.plansSection {
+  width: min(1280px, calc(100% - 40px));
+  margin: 88px auto;
+}
+
+.sectionHeading {
+  margin-bottom: 34px;
+  text-align: center;
+}
+
+.sectionHeading span {
+  color: var(--muted);
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+}
+
+.plansGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.planCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 34px 28px 30px;
+  border: 1px solid rgba(214, 181, 109, 0.4);
+  border-radius: 28px;
+  background: var(--background-deep);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.16);
+}
+
+.planNumber {
+  color: rgba(214, 181, 109, 0.3);
+  font-size: 66px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.planCard h3 {
+  margin: -10px 0 24px;
+  color: var(--gold);
+  font-size: 27px;
+}
+
+.planCard h4 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.planCard p,
+.planCard li {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.planCard ul {
+  display: grid;
+  gap: 9px;
+  margin: 20px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planCard li::before {
+  margin-right: 8px;
+  color: var(--gold);
+  content: "✓";
+  font-weight: 900;
+}
+
+.delivery {
+  padding: 15px;
+  border-radius: 14px;
+  background: rgba(214, 181, 109, 0.09);
+}
+
+.price {
+  display: flex;
+  flex-direction: column;
+  margin-top: auto;
+  padding-top: 18px;
+  color: var(--gold);
+}
+
+.price strong {
+  font-size: 25px;
+}
+
+.price span {
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.maintenance {
+  min-height: 68px;
+}
+
+.planButton {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 16px;
+  font-size: 16px;
+}
+
+.comparison {
+  padding: 40px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.comparison table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--muted);
+}
+
+.comparison th,
+.comparison td {
+  padding: 18px;
+  border-bottom: 1px solid rgba(214, 181, 109, 0.25);
+  text-align: left;
+  vertical-align: top;
+}
+
+.comparison th {
+  color: var(--gold);
+}
+
+.addons {
+  display: grid;
+  width: min(1240px, calc(100% - 40px));
+  margin: 70px auto;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.addons > div {
+  padding: 38px;
+  border-radius: 28px;
+  background: var(--background-deep);
+}
+
+.addons h2 {
+  font-size: 30px;
+}
+
+.addons h3,
+.notes h3 {
+  color: var(--text);
+  font-size: 22px;
+}
+
+.addons p + p {
+  margin-top: 14px;
+}
+
+.notes {
+  padding: 42px;
+}
+
+.notes h3 {
+  margin-top: 34px;
+  color: var(--gold);
+}
+
+.notesColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.notesColumns ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.cta {
+  padding: 58px 30px;
+  text-align: center;
+}
+
+.cta h2 {
+  max-width: 800px;
+  margin-right: auto;
+  margin-bottom: 28px;
+  margin-left: auto;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 36px 24px;
+  background: var(--background-deep);
+  color: var(--muted);
+  text-align: center;
+}
+
+.footer strong {
+  color: var(--gold);
+}
+
+@media (max-width: 900px) {
+  .plansGrid,
+  .addons,
+  .notesColumns {
+    grid-template-columns: 1fr;
+  }
+
+  .planCard {
+    padding: 30px 24px;
+  }
+
+  .comparison,
+  .notes,
+  .intro {
+    padding: 28px 22px;
+  }
+}
+
+@media (max-width: 560px) {
+  .backButton {
+    top: 10px;
+    left: 10px;
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+
+  .hero {
+    min-height: 620px;
+    padding-top: 100px;
+  }
+
+  .primaryButton {
+    width: 100%;
+    padding: 0 18px;
+  }
+
+  .intro,
+  .comparison,
+  .notes,
+  .cta,
+  .plansSection,
+  .addons {
+    width: min(100% - 24px, 1280px);
+  }
+}
