@@ -806,7 +806,10 @@ export default function Home() {
               COMO COMPRAR ?
             </a>
 
-            <a className="footer-chip" href="/solucoes-digitais">
+            <a
+              className="footer-chip"
+              href="/solucoes-digitais"
+            >
               <FooterIcon type="document" />
               SOLUÇÕES DIGITAIS
             </a>
